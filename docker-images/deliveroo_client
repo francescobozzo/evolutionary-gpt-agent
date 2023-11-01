@@ -1,0 +1,14 @@
+FROM python:3.10-slim
+
+RUN apt update
+RUN apt install -y curl
+
+WORKDIR /deliveroo_client
+
+COPY ./pyproject.toml /deliveroo_client/pyproject.toml
+RUN pip3 install .
+
+COPY ./src /deliveroo_client/src
+RUN pip3 install --no-deps .
+
+CMD deliveroo-client

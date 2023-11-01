@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+  # deliveroo:
+  #   build:
+  #     context: .
+  #     dockerfile: deliveroo-dockerfile
+  #   ports:
+  #     - "8888:8080"
+  db:
+    image: postgres:16
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  deliveroo_client:
+    build:
+      context: .
+      dockerfile: ./docker-images/deliveroo_client
+
+  agent:
+    build:
+      context: .
+      dockerfile: ./docker-images/evolutionary_gpt_agent
+    env_file:
+      - .env
+
+    # volumes:
+    #   - ./src:/src
+    #   - ./prompts:/prompts
+    #   - ./config.ini:/config.ini
+    # ports:
+    #   - "8889:8000"

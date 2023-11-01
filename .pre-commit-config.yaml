@@ -1,0 +1,37 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+-   repo: https://github.com/psf/black
+    rev: 23.10.1
+    hooks:
+    -   id: black
+        args: [--config=pyproject.toml]
+-   repo: https://github.com/hadialqattan/pycln
+    rev: v2.3.0
+    hooks:
+    -   id: pycln
+        args: [--config=pyproject.toml]
+-   repo: https://github.com/pycqa/isort
+    rev: 5.11.5
+    hooks:
+    -   id: isort
+        files: "\\.(py)$"
+        args: [--settings-path=pyproject.toml]
+# -   repo: https://github.com/pre-commit/mirrors-mypy
+#     rev: v1.6.1
+#     hooks:
+#     -   id: mypy
+#         exclude: ^tests/
+#         language_version: python3.10
+#         args: [--strict, --python-executable=python3.10]
+-   repo: https://github.com/pycqa/flake8
+    rev: '6.1.0'
+    hooks:
+    -   id: flake8

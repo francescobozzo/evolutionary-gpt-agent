@@ -1,0 +1,14 @@
+FROM python:3.10-slim
+
+RUN apt update
+RUN apt install -y curl
+
+WORKDIR /evolutionary_gpt_agent
+
+COPY ./pyproject.toml /evolutionary_gpt_agent/pyproject.toml
+RUN pip3 install .
+
+COPY ./src /evolutionary_gpt_agent/src
+RUN pip3 install --no-deps .
+
+CMD gpt-agent
