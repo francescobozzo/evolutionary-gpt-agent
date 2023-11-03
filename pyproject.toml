@@ -57,6 +57,11 @@ pre-commit = [
   # types
   "types-requests"
 ]
+dev = [
+  "typer[all] == 0.9.0",
+  "python-on-whales == 0.65.0",
+  "python-dotenv"
+]
 
 [project.scripts]
 gpt-agent = "evolutionary_gpt_agent.entrypoints.main:main"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-helpMessage="usage $0:\n\tnew_migration [message]\n\tupgrade\n\tdowngrade\n\tenter_db\n"
+helpMessage="\n\tusage $0:\n\tnew_migration [message]\n\tupgrade\n\tdowngrade\n\tenter_db\n"
 [ -z $1 ] && echo -e $helpMessage && exit 1
 set -e
 
