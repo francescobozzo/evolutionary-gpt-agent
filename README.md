@@ -1,4 +1,4 @@
-# evolutionary-gpt-agent
+# Evolutionary GPT Agent
 
 ## Database
 **Create a new migration**
@@ -7,7 +7,7 @@
 python devc.py new-migration <name>
 ```
 
-**Run newest migratino**
+**Run newest migration**
 
 ```bash
 python devc.py upgrade
@@ -28,10 +28,11 @@ pip3.10 install .
 
 ### Pre-commit
 ```
-pre-commit install ".[pre-commit]"
+pip3.10 install ".[pre-commit]"
+pre-commit install
 ```
 
 ### Dev
 ```
-pre-commit install ".[dev]"
+pip3.10 install ".[dev]"
 ```
