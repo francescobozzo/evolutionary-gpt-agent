@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import requests
 import socketio
@@ -8,7 +9,7 @@ token = (
     "ZSI6ImJvenpvIiwiaWF0IjoxNjk2MTYzMzY0fQ.DcwaUu65b9EasmYG9br6AE3WXBD2I-"
     "4lkavuD7s4eqE"
 )
-url_gpt_evolve = "http://gpt_evolve:8000"
+url_gpt_evolve = "http://agent:8000"
 
 sio = socketio.Client()
 
@@ -18,7 +19,7 @@ def catch_all(event, *data):
     status_code = 500
     while status_code != 200:
         try:
-            status_code = requests.get(url_gpt_evolve).status_code
+            status_code = requests.get(url_gpt_evolve + "/health-check").status_code
         except Exception as e:
             print(e)
             time.sleep(1)
@@ -45,6 +46,7 @@ def catch_all(event, *data):
                 "origin": "map",
                 "data": {"data": game_map},
                 "description": description,
+                "received_date": datetime.now().timestamp(),
             },
         ).status_code
     elif event == "parcels sensing":
@@ -54,6 +56,7 @@ def catch_all(event, *data):
                 "origin": event,
                 "data": {"parcels": data[0]},
                 "description": "Event associated to parcels",
+                "received_date": datetime.now().timestamp(),
             },
         )
     elif event == "agents sensing":
@@ -63,6 +66,7 @@ def catch_all(event, *data):
                 "origin": event,
                 "data": {"agents": data[0]},
                 "description": "Event associated to agents",
+                "received_date": datetime.now().timestamp(),
             },
         )
     elif event == "you":
@@ -73,6 +77,7 @@ def catch_all(event, *data):
                     "origin": "myself",
                     "data": data[0],
                     "description": "Update of yourself",
+                    "received_date": datetime.now().timestamp(),
                 },
             )
         else:
@@ -86,7 +91,4 @@ def main() -> None:
             sio.connect("http://deliveroo:8080", headers={"x-token": token})
             sio.wait()
         except Exception:
-            print(
-                "Deliveroo client can't connect to Deliveroo Server."
-                "Retrying..."
-            )
+            print("Deliveroo client can't connect to Deliveroo Server." "Retrying...")

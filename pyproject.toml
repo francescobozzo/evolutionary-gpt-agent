@@ -43,7 +43,10 @@ dependencies = [
   "SQLAlchemy >= 2",
   "alembic >= 1",
   "sqlalchemy-json == 0.7.0",
-  "PyYaml >= 5.3.1" # fix a bug
+  "PyYaml >= 5.3.1", # fix a bug
+  "pydantic >= 2",
+  "fastapi ==  0.104.1",
+  "uvicorn == 0.23.2"
 ]
 
 [project.optional-dependencies]
@@ -72,13 +75,13 @@ deliveroo-client = "deliveroo_client.main:main"
 package-data = {"evolutionary_gpt_agent" = []}
 
 [tool.black]
-line-length = 79
+line-length = 88
 
 [tool.pycln]
 all = true
 
 [tool.isort]
-line_length = 79
+line_length = 88
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0

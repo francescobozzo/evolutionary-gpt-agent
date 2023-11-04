@@ -1,11 +1,11 @@
 version: "3.8"
 services:
-  # deliveroo:
-  #   build:
-  #     context: .
-  #     dockerfile: deliveroo-dockerfile
-  #   ports:
-  #     - "8888:8080"
+  deliveroo:
+    build:
+      dockerfile: ./docker-images/deliveroo
+    ports:
+      - "8888:8080"
+
   db:
     image: postgres:16
     restart: always
