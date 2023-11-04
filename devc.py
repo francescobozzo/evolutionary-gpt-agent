@@ -6,8 +6,10 @@ from python_on_whales import DockerClient
 from typer import Typer
 
 app = Typer()
-docker = DockerClient(compose_files=["./docker-compose.yml"])
 config = dotenv_values(".env")
+docker = DockerClient(
+    compose_files=["./docker-compose.yml"], client_call=[config["CONTAINER_ENGINE"]]
+)
 
 
 @app.command(short_help="Generate a new database migration.")
@@ -21,13 +23,13 @@ def new_migration(name: str):
         remove=True,
         volumes=[
             (
-                getcwd() + "/src/models/db",
-                "/evolutionary_gpt_agent/src/models/db",
+                getcwd() + "/src/models",
+                "/evolutionary_gpt_agent/src/models",
             )
         ],
         envs=config,
         networks=["evolutionary-gpt-agent_default"],
-        workdir="/evolutionary_gpt_agent/src/models/db",
+        workdir="/evolutionary_gpt_agent/src/models",
         command=["alembic", "revision", "--autogenerate", "-m", name],
     )
 
@@ -43,7 +45,7 @@ def upgrade():
     docker.compose.run(
         service="agent",
         remove=True,
-        workdir="/evolutionary_gpt_agent/src/models/db",
+        workdir="/evolutionary_gpt_agent/src/models",
         command=["alembic", "upgrade", "head"],
     )
 
@@ -59,7 +61,7 @@ def downgrade():
     docker.compose.run(
         service="agent",
         remove=True,
-        workdir="/evolutionary_gpt_agent/src/models/db",
+        workdir="/evolutionary_gpt_agent/src/models",
         command=["alembic", "downgrade", "-1"],
     )
 
@@ -70,27 +72,11 @@ def downgrade():
 def psql():
     docker.compose.build()
     docker.compose.up(services="db", detach=True)
-    time.sleep(1)
 
     docker.compose.execute(
         "db",
         ["psql", "-U", config["POSTGRES_USER"], "-d", config["POSTGRES_DB"]],
         user="postgres",
-        tty=True,
-    )
-
-    docker.compose.down()
-
-
-@app.command(short_help="Enter inside the agent container with a bash shell")
-def agent_shell():
-    docker.compose.build()
-    docker.compose.up(services="db", detach=True)
-    time.sleep(1)
-
-    docker.compose.run(
-        "agent",
-        ["bash"],
         tty=True,
     )
 
