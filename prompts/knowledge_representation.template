@@ -1,0 +1,7 @@
+Given the following environment
+
+{}
+
+write a python streamlit dashboard to visualize it. You can use all the components offered by streamlit: text, images, tables, etc.
+
+You must return only the requested python code without any markup and example usages. No other text is needed.

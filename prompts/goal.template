@@ -1,0 +1,15 @@
+Imaging to be an agent placed inside an environment from which you can collect this information provided in json format that can change over the time
+
+{}
+
+and this events provided in json format that can change over the time
+
+{}
+
+Provide a set of generic complex tasks.
+
+The provided tasks should not include information coming from the provided example, they should be as generic as possible.
+
+You must provide the answer as a list without introduction and ending, no additional text is required.
+
+Do not provide a list with numbers or dots at the start of the line, every task should be in a separate line.

@@ -1,0 +1,25 @@
+Given the following json dictonary describing an environment
+
+{}
+
+and these json dictonary representing some events associated with the environment
+
+{}
+
+and this receivers written in python
+
+{}
+
+where a receiver is a component with the goal of changing the representation of the environment after receiving a specific environment.
+
+And this actions written in python
+
+{}
+
+where actions are single building blocks that can be used by a planner to create a sequence of actions that can be used to accomplish a given goal.
+
+Imaging to be an agent placed inside the given environment, receiving the given events. Your goal is to accomplish a provided goal using the provided actions. You have an internal planner that you can use for generating a plan composed of a list of actions that you can use to accomplish the goal.
+
+Try to describe the problem you are facing taking into consideration all the provided information.
+
+Write a description of 100 words without introduction, only the description.

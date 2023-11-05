@@ -1,0 +1,11 @@
+Given the following complex goal and parametric input example as json, decompose the goal into a list of simple actions that are required to reach the goal starting from the input and explain what each action has to do:
+
+Parametric input example: {}
+
+Goal: {}
+
+The provided list of actions should not include information coming from the provided example, they should be as generic as possible.
+
+You must provide the answer as a list without introduction and ending, no additional text is required.
+
+Do not provide a list with numbers or dots at the start of the line, every task should be in a separate line.

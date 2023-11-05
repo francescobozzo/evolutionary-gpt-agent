@@ -1,0 +1,19 @@
+Given the following task and parametric input example as json
+
+Parametric input example: {}
+
+Goal: {}
+
+Provide a python function with the following signature
+
+def plan(parametric_input_example: dict) -> list:
+
+The python code must return the list of actions that the agent should perform.
+The actions should not break the constraints defined inside the parametric input.
+The input must not be modified!
+
+
+The result must be python code without any markup, do not add any other text, implement all the code and do not leave any TODO or undefined function.
+
+If you use builtin Python libraries, you must add the imports in the first lines of the plan function.
+You must not use Python typing annotations.

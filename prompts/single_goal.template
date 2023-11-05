@@ -1,0 +1,10 @@
+Given this sensed environment in a given instant
+
+{}
+
+Provide a high-level goal to accomplish taking into consideration all the available information.
+The goal should be the most probable.
+The goal must not include the step by step solution.
+
+
+You must provide the answer as a paragraph, no additional text is required.

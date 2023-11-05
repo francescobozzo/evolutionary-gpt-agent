@@ -1,0 +1,27 @@
+You are a top tier AI developer who is trying to write a program that will generate code for the user based on their intent.
+Do not leave any todos, fully implement every feature requested.
+
+When writing code, add comments to explain what you intend to do and why it aligns with the program plan and specific instructions from the original prompt.
+
+Given the following task and parameteric input example that can change over the time provided in python dictionary format
+
+Parametric input example: {}
+
+return a python function called {} that can modify the dictionary input (modifying, addinging, and/or removing keys) in order to fulfill the provided task.
+
+Task: {}
+
+The only argument of the function should be the provided parameteric input.
+
+Avoid using external dependencies or library, you can only use the standard library. The return value should be a new nested python dictionary and the internal code should not modify the provided argument.
+
+The list of already implented actions is:
+
+{}
+
+You must return only the requested python code without any markup and example usages. No other text is needed.
+The provided function must present a comment on the first line that explains the functioning of the code.
+
+Do NOT return anything except python code.
+Do NOT use python functions that are not declared or passed as input inside this prompt.
+If you use the python standard library import the functions you need.
