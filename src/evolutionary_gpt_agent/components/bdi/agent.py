@@ -25,6 +25,8 @@ class Agent:
         )
         self._gpt_client = Client()
 
+        self._belief_set = {}
+
     def start_loop(self):
         # while True:
         self._db_handler.insert(self._experiment)
@@ -38,3 +40,35 @@ class Agent:
             dbEvent = api_event_to_db_event(e, self._experiment, last_event)
             self._db_handler.insert(dbEvent)
             last_event = dbEvent
+
+    # def new_perceiver(self):
+    #     print(
+    #         f"asking new perceiver to gpt {events_queue.qsize()}",
+    #     )
+    #     name = f"perceiver_{app.num_perceivers}"
+
+    #     prompt = _load_prompt(_PREFIX_PROMPT, _NEW_EVENT_PROMPT)
+    #     prompt = prompt.format(
+    #         "\n".join([event.to_json() for event in events]),
+    #         json.dumps(beliefset),
+    #         name,
+    #     )
+    #     perceiver_code = app.client.ask(prompt)
+
+    #     perceiver_code = clean_received_python_code(perceiver_code)
+
+    #     perceiver = Perceiver(name, perceiver_code, "", None, "")
+    #     perceiver.save_to_file()
+    #     perceiver.load_function()
+    #     new_belief_set = perceiver.test_code(
+    #         [event.to_dict() for event in events],
+    #         beliefset,
+    #     )
+
+    #     if new_belief_set != {}:
+    #         app.current_beliefset = new_belief_set
+    #         app.beliefset_history[app.checkpoint_index] = new_belief_set
+    #     else:
+    #         app.client.invalidate_last_exchange()
+
+    #         print("perceiver received", flush=True)
