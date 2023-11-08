@@ -17,6 +17,7 @@ class Experiment(Base):
     name: Mapped[str] = mapped_column(String)
     events: Mapped[list["Event"]] = relationship(back_populates="experiment")
     checkpoints: Mapped[list["Checkpoint"]] = relationship(back_populates="experiment")
+    perceivers: Mapped[list["Perceiver"]] = relationship(back_populates="experiment")
     prompt_templates: Mapped[list["PromptTemplate"]] = relationship(
         back_populates="experiment"
     )
@@ -39,6 +40,7 @@ class Event(Base):
     origin: Mapped[str]
     description: Mapped[str | None]
     data: Mapped[dict] = mapped_column(NestedMutableJson)
+    game_dump: Mapped[dict] = mapped_column(NestedMutableJson, nullable=True)
 
 
 class Checkpoint(Base):
@@ -64,12 +66,12 @@ class BeliefSet(Base):
 
     belief_set_id: Mapped[int] = mapped_column(primary_key=True)
     data: Mapped[dict] = mapped_column(NestedMutableJson, default={})
-    input_perceivers: Mapped[list["Perceiver"]] = relationship(
-        back_populates="belief_set_input"
-    )
-    output_perceivers: Mapped[list["Perceiver"]] = relationship(
-        back_populates="belief_set_output"
-    )
+    # input_perceivers: Mapped[list["Perceiver"]] = relationship(
+    #     back_populates="belief_set_input"
+    # )
+    # output_perceivers: Mapped[list["Perceiver"]] = relationship(
+    #     back_populates="belief_set_output"
+    # )
 
 
 class PromptTemplate(Base):
@@ -95,23 +97,23 @@ class Perceiver(Base):
     belief_set_output_id: Mapped[int] = mapped_column(
         ForeignKey("belief_sets.belief_set_id")
     )
-    belief_set_input: Mapped[BeliefSet] = relationship(
-        back_populates="input_perceivers"
-    )
-    belief_set_output: Mapped[BeliefSet] = relationship(
-        back_populates="output_perceivers"
-    )
+    # belief_set_input: Mapped[BeliefSet] = relationship(
+    #     back_populates="input_perceivers", foreign_keys=[belief_set_input_id]
+    # )
+    # belief_set_output: Mapped[BeliefSet] = relationship(
+    #     back_populates="output_perceivers", foreign_keys=[belief_set_output_id]
+    # )
     start_event_id: Mapped[int] = mapped_column(ForeignKey("events.event_id"))
     end_event_id: Mapped[int] = mapped_column(ForeignKey("events.event_id"))
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiments.experiment_id"))
-    experiment: Mapped[Experiment] = relationship(back_populates="checkpoints")
+    experiment: Mapped[Experiment] = relationship(back_populates="perceivers")
     code: Mapped[str]
     prompt_template_id: Mapped[int] = mapped_column(
         ForeignKey("prompt_templates.prompt_template_id")
     )
     prompt_template: Mapped[PromptTemplate] = relationship(back_populates="perceivers")
     prompt: Mapped[str]
-    checkpoint_id: Mapped[int] = relationship("checkpoints", remote_side=["id"])
+    checkpoint_id: Mapped[int] = mapped_column(ForeignKey("checkpoints.checkpoint_id"))
     checkpoint: Mapped[Checkpoint] = relationship(back_populates="perceivers")
 
 

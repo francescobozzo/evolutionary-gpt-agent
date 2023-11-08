@@ -1,5 +1,6 @@
 import time
 from os import getcwd
+from typing import Callable
 
 from dotenv import dotenv_values
 from python_on_whales import DockerClient
@@ -10,6 +11,19 @@ config = dotenv_values(".env")
 docker = DockerClient(
     compose_files=["./docker-compose.yml"], client_call=[config["CONTAINER_ENGINE"]]
 )
+
+
+def spin_db() -> tuple[bool, Callable]:
+    container = docker.compose.ps(["db"])
+
+    if len(container) > 0 and container[0].state.status == "running":
+        return True, lambda: None
+    else:
+        docker.compose.build()
+        docker.compose.up(services="db", detach=True)
+        time.sleep(2)
+
+        return False, lambda: docker.compose.down()
 
 
 @app.command(short_help="Generate a new database migration.")
@@ -70,8 +84,7 @@ def downgrade():
 
 @app.command(short_help="Enter inside the db container and run psql.")
 def psql():
-    docker.compose.build()
-    docker.compose.up(services="db", detach=True)
+    _, close_fn = spin_db()
 
     docker.compose.execute(
         "db",
@@ -80,7 +93,7 @@ def psql():
         tty=True,
     )
 
-    docker.compose.down()
+    close_fn()
 
 
 if __name__ == "__main__":

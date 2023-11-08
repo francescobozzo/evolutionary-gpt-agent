@@ -23,12 +23,18 @@ class Agent:
         self._experiment = Experiment(
             name="".join(random.choice("0123456789ABCDEF") for i in range(16))
         )
-        self._gpt_client = Client()
+        self._gpt_client = Client(
+            openai_api_key,
+            openai_api_base,
+            openai_api_type,
+            openai_api_version,
+            openai_deployment,
+            openai_model,
+        )
 
         self._belief_set = {}
 
     def start_loop(self):
-        # while True:
         self._db_handler.insert(self._experiment)
         import time
 

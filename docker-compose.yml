@@ -2,6 +2,7 @@ version: "3.8"
 services:
   deliveroo:
     build:
+      # context: ../Deliveroo.js/
       dockerfile: ./docker-images/deliveroo
     ports:
       - "8888:8080"

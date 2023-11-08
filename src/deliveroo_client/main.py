@@ -45,6 +45,7 @@ def catch_all(event, *data):
             json={
                 "origin": "map",
                 "data": {"data": game_map},
+                "game_dump": {},
                 "description": description,
                 "received_date": datetime.now().timestamp(),
             },
@@ -54,7 +55,8 @@ def catch_all(event, *data):
             event_endpoint,
             json={
                 "origin": event,
-                "data": {"parcels": data[0]},
+                "data": {"parcels": data[0]["parcels"]},
+                "game_dump": data[0].get("game_dump", {}),
                 "description": "Event associated to parcels",
                 "received_date": datetime.now().timestamp(),
             },
@@ -64,7 +66,8 @@ def catch_all(event, *data):
             event_endpoint,
             json={
                 "origin": event,
-                "data": {"agents": data[0]},
+                "data": {"agents": data[0]["agents"]},
+                "game_dump": data[0].get("game_dump", {}),
                 "description": "Event associated to agents",
                 "received_date": datetime.now().timestamp(),
             },
@@ -76,6 +79,7 @@ def catch_all(event, *data):
                 json={
                     "origin": "myself",
                     "data": data[0],
+                    "game_dump": {},
                     "description": "Update of yourself",
                     "received_date": datetime.now().timestamp(),
                 },

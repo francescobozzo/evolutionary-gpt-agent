@@ -15,4 +15,5 @@ def api_event_to_db_event(
         origin=apiEvent.origin,
         description=apiEvent.description,
         data=apiEvent.data,
+        game_dump=apiEvent.game_dump,
     )
