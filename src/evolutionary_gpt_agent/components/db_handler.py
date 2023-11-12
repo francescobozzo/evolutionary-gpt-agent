@@ -1,7 +1,7 @@
 from os import getenv
 
 from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 
 from models.db.models import Event, Experiment
 
@@ -43,19 +43,32 @@ class DatabaseHandler:
                 )
             except Exception as e:
                 print(e)
+        self._session = sessionmaker(self._engine, expire_on_commit=False)(
+            expire_on_commit=False
+        )
 
     def enque(self, *messages: _Message):
         for msg in messages:
             self._message_queue.append(msg)
 
-    def insert(self, message: _Message):
-        with Session(self._engine) as session:
-            session.add(message)
+    def insert(self, messages: list[_Message]):
+        # self._session.begin()
 
-            session.commit()
+        try:
+            for msg in messages:
+                self._session.add(msg)
+        except Exception as e:
+            print(f"unable to insert data inside the databse: {e}", flush=True)
+            self._session.rollback()
+            raise
+        else:
+            self._session.commit()
 
     def get_last_checkpoint():
         ...
+
+    def refresh(self):
+        self._session.flush()
 
 
 # if __name__ == "__main__":

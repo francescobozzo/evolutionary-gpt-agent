@@ -1,4 +1,56 @@
+import json
+
+import instructor
 import openai
+from pydantic import BaseModel
+
+from models.db.models import Experiment, PromptTemplate
+
+
+def _load_prompt(prompt: str, prefix: str | None) -> str:
+    if prefix:
+        with open(prefix, "r") as f:
+            prefix = f.read()
+    else:
+        prefix = ""
+
+    with open(prompt, "r") as f:
+        template = f.read()
+
+    return prefix + "\n" + template
+
+
+_PROMPT_DIR = "/prompts"
+
+_PREFIX_PROMPT_PATH = f"{_PROMPT_DIR}/deliveroo_prefix.template"
+_NEW_PERCEIVER_PROMPT_PATH = f"{_PROMPT_DIR}/new_perceiver.template"
+_NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/single_goal.template"
+_EXPAND_NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/expand_single_goal.template"
+_NEW_PERCEIVER_PROMPT = _load_prompt(_NEW_PERCEIVER_PROMPT_PATH, _PREFIX_PROMPT_PATH)
+_NEW_GOAL_PROMPT = _load_prompt(_NEW_GOAL_PROMPT_PATH, _PREFIX_PROMPT_PATH)
+_EXPAND_NEW_GOAL_PROMPT = _load_prompt(
+    _EXPAND_NEW_GOAL_PROMPT_PATH, _PREFIX_PROMPT_PATH
+)
+
+
+def load_prompt_templates(experiment: Experiment) -> dict[str, PromptTemplate]:
+    return {
+        "new_perceiver": PromptTemplate(
+            experiment=experiment,
+            template_type="new_perceiver",
+            template=_NEW_PERCEIVER_PROMPT,
+        ),
+        "new_goal": PromptTemplate(
+            experiment=experiment,
+            template_type="new_goal",
+            template=_NEW_GOAL_PROMPT,
+        ),
+        "expand_goal": PromptTemplate(
+            experiment=experiment,
+            template_type="expand_goal",
+            template=_EXPAND_NEW_GOAL_PROMPT,
+        ),
+    }
 
 
 class Conversation:
@@ -39,6 +91,11 @@ class Conversation:
         return self._number_of_tokens
 
 
+class _Perceiver(BaseModel):
+    python_code: str
+    description: str | None
+
+
 class Client:
     def __init__(
         self,
@@ -49,12 +106,40 @@ class Client:
         deployment: str,
         model: str,
     ) -> None:
-        openai.api_key = api_key
-        openai.api_base = api_base
-        openai.api_type = api_type
-        openai.api_version = openai.api_version
         self._deployment = deployment
-        self._model = model
+        self._model = deployment
+        if api_type == "azure":
+            self._model = deployment
+            self._client = instructor.patch(
+                openai.AzureOpenAI(
+                    api_key=api_key,
+                    api_version=api_version,
+                    azure_endpoint=api_base,
+                )
+            )
+        else:
+            raise NotImplementedError(f"gpt client: {api_type} not implemented")
+        self._role = "user"
+
+    def ask_perceiver(self, function_name: str, belief_set: dict, events: str) -> str:
+        prompt = _NEW_PERCEIVER_PROMPT.format(
+            events,
+            json.dumps(belief_set, indent=2),
+            function_name,
+        )
+        perceiver = self._client.chat.completions.create(
+            model=self._model,
+            response_model=_Perceiver,
+            max_retries=5,
+            messages=[
+                {
+                    "role": self._role,
+                    "content": prompt,
+                }
+            ],
+        )
+
+        return prompt, perceiver.python_code
 
     def ask(
         self,
@@ -65,7 +150,7 @@ class Client:
             model=self._model,
             messages=[
                 {
-                    "role": self.role,
+                    "role": self._role,
                     "content": prompt,
                 }
             ],

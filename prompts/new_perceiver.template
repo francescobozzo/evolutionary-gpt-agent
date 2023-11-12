@@ -14,7 +14,7 @@ Json input example: {}
 return a python function called {} that can modify the json input (modifying, addinging, and/or removing keys) in order to include the provided event list.
 Use the value of the "type" key contained in each provided json event to understand what the function has to do.
 
-The first argument of the function is the event list and the second one is the json input.
+The first argument of the function is the event list (it must be called events) and the second one is the json input (it must be called belief_set).
 
 Don't use external dependencies or library. The return value should be a new nested json dictionary and the internal code should not modify the provided argument.
 New events can create new nested object in the json dictionary.

@@ -17,6 +17,7 @@ class Experiment(Base):
     name: Mapped[str] = mapped_column(String)
     events: Mapped[list["Event"]] = relationship(back_populates="experiment")
     checkpoints: Mapped[list["Checkpoint"]] = relationship(back_populates="experiment")
+    belief_sets: Mapped[list["BeliefSet"]] = relationship(back_populates="experiment")
     perceivers: Mapped[list["Perceiver"]] = relationship(back_populates="experiment")
     prompt_templates: Mapped[list["PromptTemplate"]] = relationship(
         back_populates="experiment"
@@ -66,6 +67,8 @@ class BeliefSet(Base):
 
     belief_set_id: Mapped[int] = mapped_column(primary_key=True)
     data: Mapped[dict] = mapped_column(NestedMutableJson, default={})
+    experiment_id: Mapped[int] = mapped_column(ForeignKey("experiments.experiment_id"))
+    experiment: Mapped[Experiment] = relationship(back_populates="belief_sets")
     # input_perceivers: Mapped[list["Perceiver"]] = relationship(
     #     back_populates="belief_set_input"
     # )

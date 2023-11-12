@@ -8,6 +8,7 @@ WORKDIR /evolutionary_gpt_agent
 COPY ./pyproject.toml /evolutionary_gpt_agent/pyproject.toml
 RUN pip3 install .
 
+COPY ./prompts /prompts
 COPY ./src /evolutionary_gpt_agent/src
 RUN pip3 install --no-deps .
 

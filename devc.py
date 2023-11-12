@@ -96,5 +96,30 @@ def psql():
     close_fn()
 
 
+@app.command(short_help="Delete all rows inside every postgreSQL table.")
+def psql_erase():
+    _, close_fn = spin_db()
+
+    docker.compose.execute(
+        "db",
+        [
+            "psql",
+            "-U",
+            config["POSTGRES_USER"],
+            "-d",
+            config["POSTGRES_DB"],
+            "-c",
+            (
+                "TRUNCATE perceivers, events, experiments, checkpoints,"
+                " belief_sets, prompt_templates CASCADE;"
+            ),
+        ],
+        user="postgres",
+        tty=True,
+    )
+
+    close_fn()
+
+
 if __name__ == "__main__":
     app()
