@@ -1,32 +1,19 @@
 from os import getenv
 
+from loguru import logger
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.db.models import Event, Experiment
+from models.db.models import (
+    BeliefSet,
+    Checkpoint,
+    Event,
+    Experiment,
+    Perceiver,
+    PromptTemplate,
+)
 
-# from models.models import (
-#     Experiment,
-#     Event,
-#     Plan,
-#     Checkpoint,
-#     BeliefSet,
-#     Perceiver,
-#     PromptTemplates,
-# )
-
-# _Message = (
-#     Experiment
-#     | Event
-#     | Plan
-#     | Checkpoint
-#     | BeliefSet
-#     | Perceiver
-#     | PromptTemplates
-# )
-
-
-_Message = Experiment | Event
+_Message = Experiment | Event | Checkpoint | BeliefSet | Perceiver | PromptTemplate
 
 
 class DatabaseHandler:
@@ -42,7 +29,7 @@ class DatabaseHandler:
                     f":5432/{getenv('POSTGRES_DB')}"
                 )
             except Exception as e:
-                print(e)
+                logger.Debug(f"initializing postgres engine {e}")
         self._session = sessionmaker(self._engine, expire_on_commit=False)(
             expire_on_commit=False
         )
@@ -52,13 +39,13 @@ class DatabaseHandler:
             self._message_queue.append(msg)
 
     def insert(self, messages: list[_Message]):
-        # self._session.begin()
-
         try:
             for msg in messages:
                 self._session.add(msg)
+                logger.info(f"new {type(msg).__name__} inserted in the database")
+
         except Exception as e:
-            print(f"unable to insert data inside the databse: {e}", flush=True)
+            logger.error(f"unable to insert data inside the databse: {e}")
             self._session.rollback()
             raise
         else:
@@ -69,6 +56,8 @@ class DatabaseHandler:
 
     def refresh(self):
         self._session.flush()
+
+        logger.info("postgres session flushed")
 
 
 # if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import datetime
 
@@ -21,7 +22,7 @@ def catch_all(event, *data):
         try:
             status_code = requests.get(url_gpt_evolve + "/health-check").status_code
         except Exception as e:
-            print(e)
+            logging.debug(e)
             time.sleep(1)
 
     event_endpoint = f"{url_gpt_evolve}/event"
