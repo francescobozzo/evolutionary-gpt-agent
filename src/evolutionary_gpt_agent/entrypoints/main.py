@@ -1,7 +1,11 @@
 from os import getenv
 from queue import Queue
 from threading import Thread
+from typing import cast
 
+import toml
+
+from evolutionary_gpt_agent.components.bdi.actuators_handler import GameConfig
 from evolutionary_gpt_agent.components.bdi.agent import Agent
 from evolutionary_gpt_agent.components.environment_listener import init_listener
 from models.api import Event
@@ -19,6 +23,8 @@ def main() -> None:
     openai_api_version = getenv("OPENAI_API_VERSION")
     openai_deployment = getenv("OPENAI_DEPLOYMENT")
     openai_model = getenv("OPENAI_MODEL")
+    game_config_raw = toml.load("./game_configuration.toml")
+    game_config = cast(GameConfig, game_config_raw)
 
     if (
         not openai_api_key
@@ -30,6 +36,11 @@ def main() -> None:
     ):
         raise Exception("missing value in the .env config file, see .env.sample")
 
+    if not game_config:
+        raise Exception(
+            "environment_configuration.toml is not following the right structure"
+        )
+
     agent = Agent(
         events_queue,
         openai_api_key,
@@ -38,5 +49,6 @@ def main() -> None:
         openai_api_version,
         openai_deployment,
         openai_model,
+        game_config,
     )
     agent.start_loop()

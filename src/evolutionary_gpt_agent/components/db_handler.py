@@ -4,8 +4,7 @@ from typing import TypeAlias
 from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.org import Session
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from models.db.models import (
     BeliefSet,

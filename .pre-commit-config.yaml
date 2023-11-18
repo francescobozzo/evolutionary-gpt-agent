@@ -35,6 +35,7 @@ repos:
         - "pydantic >= 2"
         - "SQLAlchemy[mypy] >= 2"
         - "types-requests"
+        - "types-toml"
 -   repo: https://github.com/pycqa/flake8
     rev: '6.1.0'
     hooks:

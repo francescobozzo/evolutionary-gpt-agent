@@ -6,6 +6,14 @@ services:
       dockerfile: ./docker-images/deliveroo
     ports:
       - "8888:8080"
+    healthcheck:
+      test: curl --fail http://localhost:8080 || exit 1
+      interval: 5s # check every 30 seconds
+      timeout: 5s # at most wait for 5 seconds and then mark as unhealthy
+      retries: 5 # retries 5 times before marking unhealthy
+      start_period: 15s # period in which the start_interval is applied instead of the normal interval
+      start_interval: 2s
+
 
   db:
     image: postgres:16
@@ -14,11 +22,26 @@ services:
       - .env
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s # check every 30 seconds
+      timeout: 5s # at most wait for 5 seconds and then mark as unhealthy
+      retries: 5 # retries 5 times before marking unhealthy
+      start_period: 15s # period in which the start_interval is applied instead of the normal interval
+      start_interval: 2s
 
-  deliveroo_client:
+  run_migrations:
     build:
       context: .
-      dockerfile: ./docker-images/deliveroo_client
+      dockerfile: ./docker-images/evolutionary_gpt_agent
+    env_file:
+      - .env
+    working_dir: /evolutionary_gpt_agent/src/models/db
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
 
   agent:
     build:
@@ -26,13 +49,38 @@ services:
       dockerfile: ./docker-images/evolutionary_gpt_agent
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+      run_migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: curl --fail http://localhost:8000/health-check || exit 1
+      interval: 5s # check every 30 seconds
+      timeout: 5s # at most wait for 5 seconds and then mark as unhealthy
+      retries: 5 # retries 5 times before marking unhealthy
+      start_period: 15s # period in which the start_interval is applied instead of the normal interval
+      start_interval: 2s
+
+  deliveroo_client:
+    build:
+      context: .
+      dockerfile: ./docker-images/deliveroo_client
+    depends_on:
+      deliveroo:
+        condition: service_healthy
+        restart: true
+      agent:
+        condition: service_healthy
+        restart: true
+    healthcheck:
+      test: curl --fail http://localhost:9999/health-check || exit 1
+      interval: 5s # check every 30 seconds
+      timeout: 5s # at most wait for 5 seconds and then mark as unhealthy
+      retries: 5 # retries 5 times before marking unhealthy
+      start_period: 15s # period in which the start_interval is applied instead of the normal interval
+      start_interval: 2s
 
 volumes:
   pg_data:
-
-    # volumes:
-    #   - ./src:/src
-    #   - ./prompts:/prompts
-    #   - ./config.ini:/config.ini
-    # ports:
-    #   - "8889:8000"

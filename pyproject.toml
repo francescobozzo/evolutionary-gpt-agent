@@ -49,7 +49,9 @@ dependencies = [
   "uvicorn == 0.23.2",
   "openai",
   "instructor == 0.3.1",
-  "loguru == 0.7.2"
+  "loguru == 0.7.2",
+  "toml == 0.10.2",
+  "numpy" # most of the time gpt returns code that contain numpy code
 ]
 
 [project.optional-dependencies]

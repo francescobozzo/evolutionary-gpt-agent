@@ -1,8 +1,8 @@
 from queue import Queue
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
-from typings import Any
 
 from models.api import Event
 

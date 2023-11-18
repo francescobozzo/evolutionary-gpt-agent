@@ -1,3 +1,5 @@
+[environment]
+prompt_prefix = '''
 You are an agent that is working inside an environment.
 You should provide answers always assuming you are the agent.
 Return only what you have been asked for: if only Python code is requested, return only Python code without any other text or markdown.
@@ -9,8 +11,39 @@ When your y coordinate increases you are moving up.
 
 Map composition. The map is divided into tiles, one action move you (the agent) of one tile. There are three different types of tile: walkable, not-walkable, and delivery zones. You can move on walkable (or valid tiles) but you cannot move on not-walkable tiles (not valid)
 
-
 You have also a robotic arm that can be used to pick-up and put-down parcels.
 
 The actions that you can do must be returned as 6 strings: "up", "right", "down", "left", "pickup", and "putdown".
 When I will ask you to provide a list of actions you have to use this notation.
+'''
+
+[actions]
+[actions.up]
+host = "http://deliveroo_client:9999/up"
+sync = true
+with_response = true
+
+[actions.right]
+host = "http://deliveroo_client:9999/right"
+sync = true
+with_response = true
+
+[actions.down]
+host = "http://deliveroo_client:9999/down"
+sync = true
+with_response = true
+
+[actions.left]
+host = "http://deliveroo_client:9999/left"
+sync = true
+with_response = true
+
+[actions.pickup]
+host = "http://deliveroo_client:9999/pickup"
+sync = true
+with_response = true
+
+[actions.putdown]
+host = "http://deliveroo_client:9999/putdown"
+sync = true
+with_response = true

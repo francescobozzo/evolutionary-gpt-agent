@@ -12,4 +12,6 @@ COPY ./prompts /prompts
 COPY ./src /evolutionary_gpt_agent/src
 RUN pip3 install --no-deps .
 
+COPY ./environment_configuration.toml /evolutionary_gpt_agent/game_configuration.toml
+
 CMD gpt-agent

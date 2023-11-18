@@ -1,9 +1,14 @@
 import random
 import time
 from queue import Queue
+from time import sleep
 
 from loguru import logger
 
+from evolutionary_gpt_agent.components.bdi.actuators_handler import (
+    ActuatorHandler,
+    GameConfig,
+)
 from evolutionary_gpt_agent.components.bdi.tester import CodeTester
 from evolutionary_gpt_agent.components.db_handler import DatabaseHandler
 from evolutionary_gpt_agent.components.gpt_client import Client, load_prompt_templates
@@ -42,9 +47,11 @@ class Agent:
         openai_api_version: str,
         openai_deployment: str,
         openai_model: str,
+        game_config: GameConfig,
     ):
         self._events_queue = events_queue
         self._db_handler = DatabaseHandler()
+        self._actuators_handler = ActuatorHandler(game_config)
         self._experiment = Experiment(
             name="".join(random.choice("0123456789ABCDEF") for i in range(16))
         )
@@ -63,6 +70,7 @@ class Agent:
         self._prompt_templates_by_type = load_prompt_templates(self._experiment)
         self._checkpoint: Checkpoint | None = None
         self._last_event: DbEvent | None = None
+        self._plan: list[str] = []
 
     def start_loop(self) -> None:
         first_event: Event | None = self._bdi_loop_setup()
@@ -85,6 +93,7 @@ class Agent:
                 self._process_event_batch(batch)
 
             self._new_plan()
+            self._execute_plan()
 
     def _bdi_loop_setup(self) -> Event:
         self._db_handler.insert([self._experiment])
@@ -93,7 +102,10 @@ class Agent:
 
         self._db_handler.refresh()
 
-        event = self._events_queue.get(block=True, timeout=_SLEEP_FOR_FIRST_EVENT)
+        while self._events_queue.qsize() > 0:
+            sleep(_SLEEP_FOR_FIRST_EVENT)
+
+        event = self._events_queue.get()
 
         self._current_checkpoint = Checkpoint(
             experiment=self._experiment,
@@ -120,22 +132,24 @@ class Agent:
         json_events = [e.to_json() for e in events]
         dict_events = [e.to_dict() for e in events]
 
-        perceiver_name = f"perceiver_{self._perceiver_version}"
-        perceiver_prompt, perceiver_code = self._gpt_client.ask_perceiver(
-            perceiver_name, self._belief_set.data, "\n".join(json_events)
-        )
-
-        FIRST_EVENT_INDEX = 0
-        LAST_EVENT_INDEX = -1
-
-        perceiver = CodeTester(
-            perceiver_code,
-            perceiver_name,
-        )
-        if perceiver.is_valid(events=dict_events, belief_set=self._belief_set.data):
-            new_belief_set_data = perceiver(
-                events=dict_events, belief_set=self._belief_set.data
+        perceiver_valid = False
+        while not perceiver_valid:
+            perceiver_name = f"perceiver_{self._perceiver_version}"
+            perceiver_prompt, perceiver_code = self._gpt_client.ask_perceiver(
+                perceiver_name, self._belief_set.data, "\n".join(json_events)
             )
+
+            FIRST_EVENT_INDEX = 0
+            LAST_EVENT_INDEX = -1
+
+            perceiver = CodeTester(
+                perceiver_code,
+                perceiver_name,
+            )
+            if perceiver.is_valid(events=dict_events, belief_set=self._belief_set.data):
+                new_belief_set_data = perceiver(
+                    events=dict_events, belief_set=self._belief_set.data
+                )
             if not self._last_event:
                 raise Exception("no last event, this is completely unexpected")
 
@@ -167,37 +181,47 @@ class Agent:
 
             self._db_handler.insert([perceiver_model])
             self._perceiver_version += 1
+            perceiver_valid = False
 
     def _new_plan(self) -> None:
-        plan_name = f"plan_{self._plan_version}"
-        plan_prompt, plan_code = self._gpt_client.ask_plan(
-            plan_name, self._belief_set.data
-        )
-
-        plan = CodeTester(plan_code, plan_name)
-
-        if plan.is_valid(belief_set=self._belief_set.data):
-            if not self._last_event:
-                raise Exception("no last event, this is completely unexpected")
-
-            self._checkpoint = Checkpoint(
-                experiment=self._experiment,
-                checkpoint_type="plan",
-                game_dump=self._last_event.game_dump,
+        plan_valid = False
+        while not plan_valid:
+            plan_name = f"plan_{self._plan_version}"
+            plan_prompt, plan_code = self._gpt_client.ask_plan(
+                plan_name, self._belief_set.data
             )
 
-            self._db_handler.insert([self._checkpoint])
-            self._db_handler.refresh()
+            plan = CodeTester(plan_code, plan_name)
 
-            plan_model = DbPlan(
-                belief_set_input_id=self._belief_set.belief_set_id,
-                belief_set_output_id=self._belief_set.belief_set_id,
-                experiment=self._experiment,
-                code=plan_code,
-                prompt_template=self._prompt_templates_by_type["expand_goal"],
-                prompt=plan_prompt,
-                checkpoint=self._checkpoint,
-            )
+            if plan.is_valid(belief_set=self._belief_set.data):
+                self._plan = plan(belief_set=self._belief_set.data)
+                if not self._last_event:
+                    raise Exception("no last event, this is completely unexpected")
 
-            self._db_handler.insert([plan_model])
-            self._plan_version += 1
+                self._checkpoint = Checkpoint(
+                    experiment=self._experiment,
+                    checkpoint_type="plan",
+                    game_dump=self._last_event.game_dump,
+                )
+
+                self._db_handler.insert([self._checkpoint])
+                self._db_handler.refresh()
+
+                plan_model = DbPlan(
+                    belief_set_input_id=self._belief_set.belief_set_id,
+                    belief_set_output_id=self._belief_set.belief_set_id,
+                    experiment=self._experiment,
+                    code=plan_code,
+                    prompt_template=self._prompt_templates_by_type["expand_goal"],
+                    prompt=plan_prompt,
+                    checkpoint=self._checkpoint,
+                )
+
+                self._db_handler.insert([plan_model])
+                self._plan_version += 1
+                plan_valid = True
+
+    def _execute_plan(self) -> None:
+        while self._plan:
+            self._actuators_handler.actuate(self._plan[0])
+            self._plan = self._plan[1:]
