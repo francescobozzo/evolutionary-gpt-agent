@@ -24,13 +24,17 @@ repos:
     -   id: isort
         files: "\\.(py)$"
         args: [--settings-path=pyproject.toml]
-# -   repo: https://github.com/pre-commit/mirrors-mypy
-#     rev: v1.6.1
-#     hooks:
-#     -   id: mypy
-#         exclude: ^tests/
-#         language_version: python3.10
-#         args: [--strict, --python-executable=python3.10]
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.6.1
+    hooks:
+    -   id: mypy
+        exclude: ^tests/|src/models/db/alembic/env.py|.venv|venv
+        language_version: python3.10
+        args: [--config-file=pyproject.toml]
+        additional_dependencies:
+        - "pydantic >= 2"
+        - "SQLAlchemy[mypy] >= 2"
+        - "types-requests"
 -   repo: https://github.com/pycqa/flake8
     rev: '6.1.0'
     hooks:

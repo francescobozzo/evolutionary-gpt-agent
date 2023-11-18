@@ -1,6 +1,7 @@
 import logging
 import time
 from datetime import datetime
+from typing import Any
 
 import requests
 import socketio
@@ -16,7 +17,7 @@ sio = socketio.Client()
 
 
 @sio.on("*")
-def catch_all(event, *data):
+def catch_all(event: str, *data: dict[str, Any]) -> None:
     status_code = 500
     while status_code != 200:
         try:
@@ -35,7 +36,7 @@ def catch_all(event, *data):
             " tiles) but you cannot move on not-walkable tiles (not"
             " valid)"
         )
-        game_map = []
+        game_map: list[Any] = []
 
         for tile in data[2]:
             game_map.append(tile)

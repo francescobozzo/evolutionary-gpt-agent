@@ -13,7 +13,7 @@ docker = DockerClient(
 )
 
 
-def spin_db() -> tuple[bool, Callable]:
+def spin_db() -> tuple[bool, Callable[[], None]]:
     container = docker.compose.ps(["db"])
 
     if len(container) > 0 and container[0].state.status == "running":
@@ -27,7 +27,7 @@ def spin_db() -> tuple[bool, Callable]:
 
 
 @app.command(short_help="Generate a new database migration.")
-def new_migration(name: str):
+def new_migration(name: str) -> None:
     docker.compose.build()
     docker.compose.up(services="db", detach=True)
 
@@ -51,7 +51,7 @@ def new_migration(name: str):
 
 
 @app.command(short_help="Apply last newest migration.")
-def upgrade():
+def upgrade() -> None:
     docker.compose.build()
     docker.compose.up(services="db", detach=True)
 
@@ -67,7 +67,7 @@ def upgrade():
 
 
 @app.command(short_help="Undo last migration.")
-def downgrade():
+def downgrade() -> None:
     docker.compose.build()
     docker.compose.up(services="db", detach=True)
 
@@ -83,7 +83,7 @@ def downgrade():
 
 
 @app.command(short_help="Enter inside the db container and run psql.")
-def psql():
+def psql() -> None:
     _, close_fn = spin_db()
 
     docker.compose.execute(
@@ -97,7 +97,7 @@ def psql():
 
 
 @app.command(short_help="Delete all rows inside every postgreSQL table.")
-def psql_erase():
+def psql_erase() -> None:
     _, close_fn = spin_db()
 
     docker.compose.execute(

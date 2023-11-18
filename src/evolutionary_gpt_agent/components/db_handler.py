@@ -1,7 +1,10 @@
 from os import getenv
+from typing import TypeAlias
 
 from loguru import logger
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import create_engine
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.org import Session
 from sqlalchemy.orm import sessionmaker
 
 from models.db.models import (
@@ -13,7 +16,9 @@ from models.db.models import (
     PromptTemplate,
 )
 
-_Message = Experiment | Event | Checkpoint | BeliefSet | Perceiver | PromptTemplate
+_Message: TypeAlias = (
+    Experiment | Event | Checkpoint | BeliefSet | Perceiver | PromptTemplate
+)
 
 
 class DatabaseHandler:
@@ -30,15 +35,11 @@ class DatabaseHandler:
                 )
             except Exception as e:
                 logger.Debug(f"initializing postgres engine {e}")
-        self._session = sessionmaker(self._engine, expire_on_commit=False)(
+        self._session: Session = sessionmaker(self._engine, expire_on_commit=False)(
             expire_on_commit=False
         )
 
-    def enque(self, *messages: _Message):
-        for msg in messages:
-            self._message_queue.append(msg)
-
-    def insert(self, messages: list[_Message]):
+    def insert(self, messages: list[_Message]) -> None:
         try:
             for msg in messages:
                 self._session.add(msg)
@@ -51,10 +52,7 @@ class DatabaseHandler:
         else:
             self._session.commit()
 
-    def get_last_checkpoint():
-        ...
-
-    def refresh(self):
+    def refresh(self) -> None:
         self._session.flush()
 
         logger.info("postgres session flushed")

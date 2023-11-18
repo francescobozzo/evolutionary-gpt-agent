@@ -19,10 +19,10 @@ _SLEEP_FOR_EVENTS_BATCH = 1
 _EVENTS_BATCH_SIZE = 3
 
 
-def divide_into_batches(queue: Queue, batch_size: int):
+def divide_into_batches(queue: Queue[Event], batch_size: int) -> list[list[Event]]:
     num_batches = queue.qsize()
 
-    batches = []
+    batches: list[list[Event]] = []
 
     for i in range(num_batches):
         batches.append([])
@@ -35,7 +35,7 @@ def divide_into_batches(queue: Queue, batch_size: int):
 class Agent:
     def __init__(
         self,
-        events_queue: Queue,
+        events_queue: Queue[Event],
         openai_api_key: str,
         openai_api_base: str,
         openai_api_type: str,
@@ -64,8 +64,8 @@ class Agent:
         self._checkpoint: Checkpoint | None = None
         self._last_event: DbEvent | None = None
 
-    def start_loop(self):
-        first_event = self._bdi_loop_setup()
+    def start_loop(self) -> None:
+        first_event: Event | None = self._bdi_loop_setup()
 
         while True:
             while self._events_queue.qsize() < _EVENTS_BATCH_SIZE:
@@ -136,6 +136,9 @@ class Agent:
             new_belief_set_data = perceiver(
                 events=dict_events, belief_set=self._belief_set.data
             )
+            if not self._last_event:
+                raise Exception("no last event, this is completely unexpected")
+
             self._checkpoint = Checkpoint(
                 experiment=self._experiment,
                 checkpoint_type="perceiver",
@@ -165,7 +168,7 @@ class Agent:
             self._db_handler.insert([perceiver_model])
             self._perceiver_version += 1
 
-    def _new_plan(self):
+    def _new_plan(self) -> None:
         plan_name = f"plan_{self._plan_version}"
         plan_prompt, plan_code = self._gpt_client.ask_plan(
             plan_name, self._belief_set.data
@@ -174,6 +177,9 @@ class Agent:
         plan = CodeTester(plan_code, plan_name)
 
         if plan.is_valid(belief_set=self._belief_set.data):
+            if not self._last_event:
+                raise Exception("no last event, this is completely unexpected")
+
             self._checkpoint = Checkpoint(
                 experiment=self._experiment,
                 checkpoint_type="plan",

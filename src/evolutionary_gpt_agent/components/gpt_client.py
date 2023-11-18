@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import instructor
 import openai
@@ -54,14 +55,14 @@ def load_prompt_templates(experiment: Experiment) -> dict[str, PromptTemplate]:
 
 
 class Conversation:
-    def __init__(self):
-        self._user_messages = []
-        self._gpt_messages = []
-        self._conversation = []
+    def __init__(self) -> None:
+        self._user_messages: list[str] = []
+        self._gpt_messages: list[str] = []
+        self._conversation: list[dict[str, str]] = []
         self._number_of_tokens = 0
         self._last_tokens = 0
 
-    def add(self, prompt, answer):
+    def add(self, prompt: str, answer: str) -> None:
         self._user_messages.append(prompt)
         self._gpt_messages.append(answer)
         self._conversation.append(
@@ -73,7 +74,7 @@ class Conversation:
         self._last_tokens = len(prompt) + len(answer)
         self._number_of_tokens += self._last_tokens
 
-    def invalidate_last_exchange(self):
+    def invalidate_last_exchange(self) -> None:
         if self._user_messages:
             self._user_messages.pop()
         if self._user_messages:
@@ -84,10 +85,10 @@ class Conversation:
         if self._number_of_tokens < 0:
             self._number_of_tokens = 0
 
-    def get_conversation(self):
+    def get_conversation(self) -> list[dict[str, str]]:
         return self._conversation
 
-    def number_of_tokens(self):
+    def number_of_tokens(self) -> int:
         return self._number_of_tokens
 
 
@@ -127,7 +128,7 @@ class Client:
         self._role = "user"
 
     def ask_perceiver(
-        self, function_name: str, belief_set: dict, events: str
+        self, function_name: str, belief_set: dict[Any, Any], events: str
     ) -> tuple[str, str]:
         prompt = _NEW_PERCEIVER_PROMPT.format(
             events,
@@ -148,7 +149,9 @@ class Client:
 
         return prompt, perceiver.python_code
 
-    def ask_plan(self, function_name: str, belief_set: dict) -> str:
+    def ask_plan(
+        self, function_name: str, belief_set: dict[Any, Any]
+    ) -> tuple[str, str]:
         prompt = _NEW_GOAL_PROMPT.format(json.dumps(belief_set))
 
         goal = self._client.chat.completions.create(
@@ -187,28 +190,31 @@ class Client:
             ],
         )
 
+        if not isinstance(chat_completion.choices[0].message.content, str):
+            raise Exception("gpt client didn't return a str")
+
         return chat_completion.choices[0].message.content
 
-    def ask_discussion(
-        self,
-        prompt: str,
-    ) -> str:
-        messages = self.conversation.get_conversation() + [
-            {
-                "role": self.role,
-                "content": prompt,
-            }
-        ]
-        chat_completion = openai.ChatCompletion.create(
-            engine=self._deployment,
-            model=self._model,
-            messages=messages,
-        )
+    # def ask_discussion(
+    #     self,
+    #     prompt: str,
+    # ) -> str:
+    #     messages = self.conversation.get_conversation() + [
+    #         {
+    #             "role": self.role,
+    #             "content": prompt,
+    #         }
+    #     ]
+    #     chat_completion = openai.ChatCompletion.create(
+    #         engine=self._deployment,
+    #         model=self._model,
+    #         messages=messages,
+    #     )
 
-        answer = chat_completion.choices[0].message.content
-        self.conversation.add(prompt, answer)
+    #     answer = chat_completion.choices[0].message.content
+    #     self.conversation.add(prompt, answer)
 
-        return answer
+    #     return answer
 
-    def invalidate_last_exchange(self):
-        self.conversation.invalidate_last_exchange()
+    # def invalidate_last_exchange(self):
+    #     self.conversation.invalidate_last_exchange()
