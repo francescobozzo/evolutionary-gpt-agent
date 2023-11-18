@@ -96,6 +96,11 @@ class _Perceiver(BaseModel):
     description: str | None
 
 
+class _Plan(BaseModel):
+    python_code: str
+    description: str | None
+
+
 class Client:
     def __init__(
         self,
@@ -121,7 +126,9 @@ class Client:
             raise NotImplementedError(f"gpt client: {api_type} not implemented")
         self._role = "user"
 
-    def ask_perceiver(self, function_name: str, belief_set: dict, events: str) -> str:
+    def ask_perceiver(
+        self, function_name: str, belief_set: dict, events: str
+    ) -> tuple[str, str]:
         prompt = _NEW_PERCEIVER_PROMPT.format(
             events,
             json.dumps(belief_set, indent=2),
@@ -140,6 +147,30 @@ class Client:
         )
 
         return prompt, perceiver.python_code
+
+    def ask_plan(self, function_name: str, belief_set: dict) -> str:
+        prompt = _NEW_GOAL_PROMPT.format(json.dumps(belief_set))
+
+        goal = self._client.chat.completions.create(
+            model=self._model, messages=[{"role": self._role, "content": prompt}]
+        )
+
+        prompt = _EXPAND_NEW_GOAL_PROMPT.format(
+            json.dumps(belief_set), goal, function_name
+        )
+        plan = self._client.chat.completions.create(
+            model=self._model,
+            response_model=_Plan,
+            max_retries=5,
+            messages=[
+                {
+                    "role": self._role,
+                    "content": prompt,
+                }
+            ],
+        )
+
+        return prompt, plan.python_code
 
     def ask(
         self,

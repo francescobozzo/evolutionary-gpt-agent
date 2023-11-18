@@ -6,7 +6,7 @@ Goal: {}
 
 Provide a python function with the following signature
 
-def plan(parametric_input_example: dict) -> list:
+def {}(belief_set: dict) -> list:
 
 The python code must return the list of actions that the agent should perform.
 The actions should not break the constraints defined inside the parametric input.

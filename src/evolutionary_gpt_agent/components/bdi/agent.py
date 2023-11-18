@@ -11,6 +11,7 @@ from models.api import Event
 from models.db.models import BeliefSet, Checkpoint
 from models.db.models import Event as DbEvent
 from models.db.models import Experiment, Perceiver
+from models.db.models import Plan as DbPlan
 from models.mappers import api_event_to_db_event
 
 _SLEEP_FOR_FIRST_EVENT = 1
@@ -58,6 +59,7 @@ class Agent:
 
         self._belief_set = BeliefSet(data={}, experiment=self._experiment)
         self._perceiver_version = 0
+        self._plan_version = 0
         self._prompt_templates_by_type = load_prompt_templates(self._experiment)
         self._checkpoint: Checkpoint | None = None
         self._last_event: DbEvent | None = None
@@ -81,6 +83,8 @@ class Agent:
 
             for batch in event_batches:
                 self._process_event_batch(batch)
+
+            self._new_plan()
 
     def _bdi_loop_setup(self) -> Event:
         self._db_handler.insert([self._experiment])
@@ -157,36 +161,37 @@ class Agent:
                 prompt=perceiver_prompt,
                 checkpoint=self._checkpoint,
             )
+
             self._db_handler.insert([perceiver_model])
+            self._perceiver_version += 1
 
-    # def new_perceiver(self):
-    #     print(
-    #         f"asking new perceiver to gpt {events_queue.qsize()}",
-    #     )
-    #     name = f"perceiver_{app.num_perceivers}"
+    def _new_plan(self):
+        plan_name = f"plan_{self._plan_version}"
+        plan_prompt, plan_code = self._gpt_client.ask_plan(
+            plan_name, self._belief_set.data
+        )
 
-    #     prompt = _load_prompt(_PREFIX_PROMPT, _NEW_EVENT_PROMPT)
-    #     prompt = prompt.format(
-    #         "\n".join([event.to_json() for event in events]),
-    #         json.dumps(beliefset),
-    #         name,
-    #     )
-    #     perceiver_code = app.client.ask(prompt)
+        plan = CodeTester(plan_code, plan_name)
 
-    #     perceiver_code = clean_received_python_code(perceiver_code)
+        if plan.is_valid(belief_set=self._belief_set.data):
+            self._checkpoint = Checkpoint(
+                experiment=self._experiment,
+                checkpoint_type="plan",
+                game_dump=self._last_event.game_dump,
+            )
 
-    #     perceiver = Perceiver(name, perceiver_code, "", None, "")
-    #     perceiver.save_to_file()
-    #     perceiver.load_function()
-    #     new_belief_set = perceiver.test_code(
-    #         [event.to_dict() for event in events],
-    #         beliefset,
-    #     )
+            self._db_handler.insert([self._checkpoint])
+            self._db_handler.refresh()
 
-    #     if new_belief_set != {}:
-    #         app.current_beliefset = new_belief_set
-    #         app.beliefset_history[app.checkpoint_index] = new_belief_set
-    #     else:
-    #         app.client.invalidate_last_exchange()
+            plan_model = DbPlan(
+                belief_set_input_id=self._belief_set.belief_set_id,
+                belief_set_output_id=self._belief_set.belief_set_id,
+                experiment=self._experiment,
+                code=plan_code,
+                prompt_template=self._prompt_templates_by_type["expand_goal"],
+                prompt=plan_prompt,
+                checkpoint=self._checkpoint,
+            )
 
-    #         print("perceiver received", flush=True)
+            self._db_handler.insert([plan_model])
+            self._plan_version += 1
