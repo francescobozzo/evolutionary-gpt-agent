@@ -82,5 +82,14 @@ services:
       start_period: 15s # period in which the start_interval is applied instead of the normal interval
       start_interval: 2s
 
+  agent_pov:
+    build:
+      context: .
+      dockerfile: ./docker-images/agent_pov
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./agent-pov/src:/agent-pov/src
+
 volumes:
   pg_data:

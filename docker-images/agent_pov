@@ -1,0 +1,12 @@
+FROM node:18-bullseye
+
+RUN apt update
+RUN apt install -y python3 git
+
+WORKDIR /agent-pov
+COPY ./agent-pov/package*.json /agent-pov
+RUN npm i
+
+COPY ./agent-pov /agent-pov
+
+CMD npm run dev

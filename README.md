@@ -19,6 +19,14 @@ python devc.py upgrade
 python downgrade
 ```
 
+## Frontend
+### Hot reloading
+When running all services with `docker-compose`, hot reloading is really slow (can take up to 10-20 seconds).
+For development, and exploit fully `vite`'s hot reload avoiding using containers is suggested:
+
+- comment `agent_pov` from `docker-compose.yml`
+- `cd agent-pov && npm run dev`
+
 ## Deps
 ```bash
 python3.10 -m venv .venv
