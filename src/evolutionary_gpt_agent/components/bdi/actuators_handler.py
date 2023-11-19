@@ -22,6 +22,9 @@ class ActuatorHandler:
     def __init__(self, game_config: GameConfig) -> None:
         self._game_config = game_config
 
+    def is_action_blocking(self, action: str) -> bool:
+        return self._game_config["actions"][action]["sync"]
+
     def actuate(self, action: str) -> Any:
         if action not in self._game_config["actions"]:
             raise Exception(
@@ -37,4 +40,4 @@ class ActuatorHandler:
         ):
             return response.content
 
-        return
+        return None

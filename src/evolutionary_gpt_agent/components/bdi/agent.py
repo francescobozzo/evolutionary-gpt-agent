@@ -1,5 +1,4 @@
 import random
-import time
 from queue import Queue
 from time import sleep
 
@@ -81,7 +80,7 @@ class Agent:
                     "waiting for new events"
                     f" {self._events_queue.qsize()}/{_EVENTS_BATCH_SIZE}"
                 )
-                time.sleep(_SLEEP_FOR_EVENTS_BATCH)
+                sleep(_SLEEP_FOR_EVENTS_BATCH)
 
             event_batches = divide_into_batches(self._events_queue, _EVENTS_BATCH_SIZE)
 
@@ -223,5 +222,7 @@ class Agent:
 
     def _execute_plan(self) -> None:
         while self._plan:
-            self._actuators_handler.actuate(self._plan[0])
-            self._plan = self._plan[1:]
+            response = self._actuators_handler.actuate(self._plan[0])
+            is_blocking = self._actuators_handler.is_action_blocking(self._plan[0])
+            if not is_blocking or (is_blocking and response is not None):
+                self._plan = self._plan[1:]
