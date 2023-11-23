@@ -90,6 +90,8 @@ services:
       agent:
         condition: service_healthy
         restart: true
+    env_file:
+      - .env
     healthcheck:
       test: curl --fail http://localhost:9876/health-check || exit 1
       interval: 5s # check every 30 seconds
