@@ -1,0 +1,14 @@
+FROM python:3.10-slim
+
+RUN apt update
+RUN apt install -y curl
+
+WORKDIR /agent_pov_server
+
+COPY ./pyproject.toml /agent_pov_server/pyproject.toml
+RUN pip3 install .
+
+COPY ./src /agent_pov_server/src
+RUN pip3 install --no-deps .
+
+CMD agent-pov-server

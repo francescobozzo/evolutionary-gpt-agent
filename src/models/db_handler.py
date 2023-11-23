@@ -12,11 +12,12 @@ from models.db.models import (
     Event,
     Experiment,
     Perceiver,
+    Plan,
     PromptTemplate,
 )
 
 _Message: TypeAlias = (
-    Experiment | Event | Checkpoint | BeliefSet | Perceiver | PromptTemplate
+    Experiment | Event | Checkpoint | BeliefSet | Perceiver | PromptTemplate | Plan
 )
 
 
@@ -33,7 +34,7 @@ class DatabaseHandler:
                     f":5432/{getenv('POSTGRES_DB')}"
                 )
             except Exception as e:
-                logger.Debug(f"initializing postgres engine {e}")
+                logger.debug(f"initializing postgres engine {e}")
         self._session: Session = sessionmaker(self._engine, expire_on_commit=False)(
             expire_on_commit=False
         )
@@ -55,6 +56,3 @@ class DatabaseHandler:
         self._session.flush()
 
         logger.info("postgres session flushed")
-
-
-# if __name__ == "__main__":

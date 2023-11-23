@@ -9,13 +9,13 @@ from evolutionary_gpt_agent.components.bdi.actuators_handler import (
     GameConfig,
 )
 from evolutionary_gpt_agent.components.bdi.tester import CodeTester
-from evolutionary_gpt_agent.components.db_handler import DatabaseHandler
 from evolutionary_gpt_agent.components.gpt_client import Client, load_prompt_templates
 from models.api import Event
 from models.db.models import BeliefSet, Checkpoint
 from models.db.models import Event as DbEvent
 from models.db.models import Experiment, Perceiver
 from models.db.models import Plan as DbPlan
+from models.db_handler import DatabaseHandler
 from models.mappers import api_event_to_db_event
 
 _SLEEP_FOR_FIRST_EVENT = 1
@@ -149,6 +149,10 @@ class Agent:
                 new_belief_set_data = perceiver(
                     events=dict_events, belief_set=self._belief_set.data
                 )
+            else:
+                logger.warning(f"Perceiver {perceiver_name} not valid, trying again.")
+                continue
+
             if not self._last_event:
                 raise Exception("no last event, this is completely unexpected")
 
@@ -180,7 +184,7 @@ class Agent:
 
             self._db_handler.insert([perceiver_model])
             self._perceiver_version += 1
-            perceiver_valid = False
+            perceiver_valid = True
 
     def _new_plan(self) -> None:
         plan_valid = False

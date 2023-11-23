@@ -71,6 +71,7 @@ dev = [
 [project.scripts]
 gpt-agent = "evolutionary_gpt_agent.entrypoints.main:main"
 deliveroo-client = "deliveroo_client.main:main"
+agent-pov-server = "agent_pov_server.main:main"
 
 
 [tool.setuptools]

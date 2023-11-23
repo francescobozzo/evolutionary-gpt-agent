@@ -82,6 +82,24 @@ services:
       start_period: 15s # period in which the start_interval is applied instead of the normal interval
       start_interval: 2s
 
+  agent_pov_server:
+    build:
+      context: .
+      dockerfile: ./docker-images/agent_pov_server
+    depends_on:
+      agent:
+        condition: service_healthy
+        restart: true
+    healthcheck:
+      test: curl --fail http://localhost:9876/health-check || exit 1
+      interval: 5s # check every 30 seconds
+      timeout: 5s # at most wait for 5 seconds and then mark as unhealthy
+      retries: 5 # retries 5 times before marking unhealthy
+      start_period: 15s # period in which the start_interval is applied instead of the normal interval
+      start_interval: 2s
+    ports:
+      - "9876:9876"
+
   agent_pov:
     build:
       context: .
