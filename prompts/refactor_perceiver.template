@@ -1,0 +1,22 @@
+You are a top tier AI developer who is trying to write a program that will generate code for the user based on their intent.
+Do not leave any todos, fully implement every feature requested.
+
+
+Given this events expressed as jsons
+
+{}
+
+and the following python functions
+
+{}
+
+refactor all functions returning a single python function called {}
+that can modify the json input (modifying, addinging, and/or removing keys) in order to include the provided event list.
+Use the value of the "type" key contained in each provided json event to understand what the function has to do.
+
+The first argument of the function is the event list (it must be called events) and the second one is the json input (it must be called belief_set).
+that is able to handle all events in the most generic way.
+
+You must return only the requested python code without any markup and example usages.
+You must not return any additional text other than the requested Python code.
+Returns only the python code. Don't add any other text or markdown markup.

@@ -3,18 +3,13 @@ from typing import Any
 
 import instructor
 import openai
+import tiktoken
 from pydantic import BaseModel
 
-from models.db.models import Experiment, PromptTemplate
+from models.db.models import Event, Experiment, Perceiver, PromptTemplate
 
 
-def _load_prompt(prompt: str, prefix: str | None) -> str:
-    if prefix:
-        with open(prefix, "r") as f:
-            prefix = f.read()
-    else:
-        prefix = ""
-
+def _load_prompt(prompt: str, prefix: str) -> str:
     with open(prompt, "r") as f:
         template = f.read()
 
@@ -23,18 +18,22 @@ def _load_prompt(prompt: str, prefix: str | None) -> str:
 
 _PROMPT_DIR = "/prompts"
 
-_PREFIX_PROMPT_PATH = f"{_PROMPT_DIR}/deliveroo_prefix.template"
 _NEW_PERCEIVER_PROMPT_PATH = f"{_PROMPT_DIR}/new_perceiver.template"
+_REFACTOR_PERCEIVER_PROMPT_PATH = f"{_PROMPT_DIR}/refactor_perceiver.template"
 _NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/single_goal.template"
 _EXPAND_NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/expand_single_goal.template"
-_NEW_PERCEIVER_PROMPT = _load_prompt(_NEW_PERCEIVER_PROMPT_PATH, _PREFIX_PROMPT_PATH)
-_NEW_GOAL_PROMPT = _load_prompt(_NEW_GOAL_PROMPT_PATH, _PREFIX_PROMPT_PATH)
-_EXPAND_NEW_GOAL_PROMPT = _load_prompt(
-    _EXPAND_NEW_GOAL_PROMPT_PATH, _PREFIX_PROMPT_PATH
-)
 
 
-def load_prompt_templates(experiment: Experiment) -> dict[str, PromptTemplate]:
+def load_prompt_templates(
+    experiment: Experiment, prompt_prefix: str
+) -> dict[str, PromptTemplate]:
+    _NEW_PERCEIVER_PROMPT = _load_prompt(_NEW_PERCEIVER_PROMPT_PATH, prompt_prefix)
+    _REFACTOR_PERCEIVER_PROMPT = _load_prompt(
+        _REFACTOR_PERCEIVER_PROMPT_PATH, prompt_prefix
+    )
+    _NEW_GOAL_PROMPT = _load_prompt(_NEW_GOAL_PROMPT_PATH, prompt_prefix)
+    _EXPAND_NEW_GOAL_PROMPT = _load_prompt(_EXPAND_NEW_GOAL_PROMPT_PATH, prompt_prefix)
+
     return {
         "new_perceiver": PromptTemplate(
             experiment=experiment,
@@ -50,6 +49,11 @@ def load_prompt_templates(experiment: Experiment) -> dict[str, PromptTemplate]:
             experiment=experiment,
             template_type="expand_goal",
             template=_EXPAND_NEW_GOAL_PROMPT,
+        ),
+        "refactor_perceiver": PromptTemplate(
+            experiment=experiment,
+            template_type="refactor_perceiver",
+            template=_REFACTOR_PERCEIVER_PROMPT,
         ),
     }
 
@@ -111,6 +115,7 @@ class Client:
         api_version: str,
         deployment: str,
         model: str,
+        prompt_prefix: str,
     ) -> None:
         self._deployment = deployment
         self._model = deployment
@@ -127,10 +132,21 @@ class Client:
             raise NotImplementedError(f"gpt client: {api_type} not implemented")
         self._role = "user"
 
+        self._new_perceiver_prompt = _load_prompt(
+            _NEW_PERCEIVER_PROMPT_PATH, prompt_prefix
+        )
+        self._refactor_perceiver_prompt = _load_prompt(
+            _REFACTOR_PERCEIVER_PROMPT_PATH, prompt_prefix
+        )
+        self._new_goal_prompt = _load_prompt(_NEW_GOAL_PROMPT_PATH, prompt_prefix)
+        self._expand_new_goal_prompt = _load_prompt(
+            _EXPAND_NEW_GOAL_PROMPT_PATH, prompt_prefix
+        )
+
     def ask_perceiver(
         self, function_name: str, belief_set: dict[Any, Any], events: str
     ) -> tuple[str, str]:
-        prompt = _NEW_PERCEIVER_PROMPT.format(
+        prompt = self._new_perceiver_prompt.format(
             events,
             json.dumps(belief_set, indent=2),
             function_name,
@@ -152,13 +168,13 @@ class Client:
     def ask_plan(
         self, function_name: str, belief_set: dict[Any, Any]
     ) -> tuple[str, str]:
-        prompt = _NEW_GOAL_PROMPT.format(json.dumps(belief_set))
+        prompt = self._new_goal_prompt.format(json.dumps(belief_set))
 
         goal = self._client.chat.completions.create(
             model=self._model, messages=[{"role": self._role, "content": prompt}]
         )
 
-        prompt = _EXPAND_NEW_GOAL_PROMPT.format(
+        prompt = self._expand_new_goal_prompt.format(
             json.dumps(belief_set), goal, function_name
         )
         plan = self._client.chat.completions.create(
@@ -194,6 +210,51 @@ class Client:
             raise Exception("gpt client didn't return a str")
 
         return chat_completion.choices[0].message.content
+
+    def refactor_perceivers(
+        self,
+        events_by_perceivers: dict[Perceiver, list[Event]],
+        function_name: str,
+    ) -> tuple[str, str]:
+        events_prompt_content = ""
+        perceivers_prompt_content = ""
+
+        encoder = tiktoken.encoding_for_model("gpt-4")
+
+        for perceiver, events in events_by_perceivers.items():
+            event_current_content = "\n".join(
+                [json.dumps(e.data, separators=(",", ":")) for e in events]
+            )
+            perceiver_current_content = perceiver.code
+
+            if (
+                len(
+                    encoder.encode(
+                        f"{events_prompt_content}\n{event_current_content}"
+                        f"\n{perceivers_prompt_content}\n{perceiver_current_content}"
+                    )
+                )
+                > 8000
+            ):
+                break
+
+            events_prompt_content += "\n" + event_current_content
+            perceivers_prompt_content += "\n" + perceiver_current_content
+
+        prompt = self._refactor_perceiver_prompt.format(
+            events_prompt_content,
+            perceivers_prompt_content,
+            function_name,
+        )
+
+        perceiver = self._client.chat.completions.create(
+            model=self._model,
+            response_model=_Perceiver,
+            max_retries=5,
+            messages=[{"role": self._role, "content": prompt}],
+        )
+
+        return prompt, perceiver.python_code
 
     # def ask_discussion(
     #     self,

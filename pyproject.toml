@@ -51,7 +51,8 @@ dependencies = [
   "instructor == 0.3.1",
   "loguru == 0.7.2",
   "toml == 0.10.2",
-  "numpy" # most of the time gpt returns code that contain numpy code
+  "numpy", # most of the time gpt returns code that contain numpy code
+  "tiktoken", # count tokens provided to gpt
 ]
 
 [project.optional-dependencies]
@@ -70,6 +71,7 @@ dev = [
 
 [project.scripts]
 gpt-agent = "evolutionary_gpt_agent.entrypoints.main:main"
+agent-dev = "evolutionary_gpt_agent.entrypoints.dev:main"
 deliveroo-client = "deliveroo_client.main:main"
 agent-pov-server = "agent_pov_server.main:main"
 

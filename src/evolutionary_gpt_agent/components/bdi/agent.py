@@ -61,12 +61,15 @@ class Agent:
             openai_api_version,
             openai_deployment,
             openai_model,
+            game_config["environment"]["prompt_prefix"],
         )
 
         self._belief_set = BeliefSet(data={}, experiment=self._experiment)
         self._perceiver_version = 0
         self._plan_version = 0
-        self._prompt_templates_by_type = load_prompt_templates(self._experiment)
+        self._prompt_templates_by_type = load_prompt_templates(
+            self._experiment, game_config["environment"]["prompt_prefix"]
+        )
         self._checkpoint: Checkpoint | None = None
         self._last_event: DbEvent | None = None
         self._plan: list[str] = []
