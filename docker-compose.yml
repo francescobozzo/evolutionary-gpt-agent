@@ -87,7 +87,7 @@ services:
       context: .
       dockerfile: ./docker-images/agent_pov_server
     depends_on:
-      agent:
+      db:
         condition: service_healthy
         restart: true
     env_file:
@@ -102,14 +102,18 @@ services:
     ports:
       - "9876:9876"
 
-  agent_pov:
-    build:
-      context: .
-      dockerfile: ./docker-images/agent_pov
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./agent-pov/src:/agent-pov/src
+  # agent_pov:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker-images/agent_pov
+  #   depends_on:
+  #     agent_pov_server:
+  #       condition: service_healthy
+  #       restart: true
+  #   ports:
+  #     - "5173:5173"
+  #   volumes:
+  #     - ./agent-pov/src:/agent-pov/src
 
 volumes:
   pg_data:

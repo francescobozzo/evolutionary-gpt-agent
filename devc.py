@@ -9,7 +9,8 @@ from typer import Typer
 app = Typer()
 config = dotenv_values(".env")
 docker = DockerClient(
-    compose_files=["./docker-compose.yml"], client_call=[config["CONTAINER_ENGINE"]]
+    compose_files=["./docker-compose.yml"],
+    client_call=[config["CONTAINER_ENGINE"] or "docker"],
 )
 
 
@@ -119,6 +120,18 @@ def psql_erase() -> None:
     )
 
     close_fn()
+
+
+@app.command(short_help="Inspect database visually.")
+def agent_pov() -> None:
+    docker.compose.build()
+    docker.compose.up(
+        services=[
+            "db",
+            "agent_pov_server",
+            # "agent_pov",
+        ]
+    )
 
 
 if __name__ == "__main__":
