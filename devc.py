@@ -148,7 +148,17 @@ def agent_dev() -> None:
 def gpt_estimate_costs(experiment_name: Optional[str] = None) -> None:
     _, close_fn = spin_db()
 
-    docker.compose.run("agent", tty=True, build=True, command=["gpt-estimate-costs"])
+    if experiment_name:
+        docker.compose.run(
+            "agent",
+            tty=True,
+            build=True,
+            command=["gpt-estimate-costs", "--experiment-name", experiment_name],
+        )
+    else:
+        docker.compose.run(
+            "agent", tty=True, build=True, command=["gpt-estimate-costs"]
+        )
 
     close_fn()
 

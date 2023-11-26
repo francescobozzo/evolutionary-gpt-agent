@@ -23,7 +23,7 @@ def _pickup() -> Any:
 
 def _putdown() -> Any:
     logger.debug("agent action received: putdown")
-    return sio.call("putdown")
+    return sio.emit("putdown")
 
 
 @_app.get("/up/")
@@ -62,4 +62,5 @@ def health_check() -> bool:
 
 
 def init_agent_to_environment_listener() -> None:
+    logger.info("agent to environment listener initialized")
     uvicorn.run(_app, host="0.0.0.0", port=9999, log_level="error")

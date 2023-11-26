@@ -76,4 +76,5 @@ def catch_all(event: str, *data: dict[str, Any]) -> None:
 
 
 def init_environment_to_agent_listener() -> None:
+    logger.info("environment to agent listener initialized")
     sio.wait()

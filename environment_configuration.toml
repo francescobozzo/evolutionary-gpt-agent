@@ -45,5 +45,5 @@ with_response = true
 
 [actions.putdown]
 host = "http://deliveroo_client:9999/putdown"
-sync = true
-with_response = true
+sync = false
+with_response = false

@@ -144,6 +144,7 @@ class Plan(Base):
     prompt_template_id: Mapped[int] = mapped_column(
         ForeignKey("prompt_templates.prompt_template_id")
     )
+    actions: Mapped[str]
     prompt_template: Mapped[PromptTemplate] = relationship(back_populates="plans")
     prompt: Mapped[str]
     checkpoint_id: Mapped[int] = mapped_column(ForeignKey("checkpoints.checkpoint_id"))

@@ -106,6 +106,10 @@ class _Plan(BaseModel):
     description: str | None
 
 
+class _Goal(BaseModel):
+    text: str
+
+
 class Client:
     def __init__(
         self,
@@ -171,7 +175,10 @@ class Client:
         prompt = self._new_goal_prompt.format(json.dumps(belief_set))
 
         goal = self._client.chat.completions.create(
-            model=self._model, messages=[{"role": self._role, "content": prompt}]
+            model=self._model,
+            max_retries=5,
+            response_model=_Goal,
+            messages=[{"role": self._role, "content": prompt}],
         )
 
         prompt = self._expand_new_goal_prompt.format(
@@ -180,7 +187,7 @@ class Client:
         plan = self._client.chat.completions.create(
             model=self._model,
             response_model=_Plan,
-            max_retries=5,
+            max_retries=10,
             messages=[
                 {
                     "role": self._role,
