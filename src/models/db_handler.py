@@ -57,12 +57,20 @@ class DatabaseHandler:
 
         logger.info("postgres session flushed")
 
+    def get_all_experiments(self) -> list[Experiment]:
+        return [row[0] for row in self._session.execute(select(Experiment)).all()]
+
     def get_experiment_by_name(self, name: str) -> Experiment:
-        return self._session.execute(
+        experiment = self._session.execute(
             select(Experiment).where(Experiment.name == name)
         ).one()[0]
 
-    def get_all_perceivers(self, experiment: Experiment) -> Perceiver:
+        if not isinstance(experiment, Experiment):
+            raise Exception(f"not able to fetch experiment {name} from db")
+
+        return experiment
+
+    def get_all_perceivers(self, experiment: Experiment) -> list[Perceiver]:
         return [
             row[0]
             for row in self._session.execute(

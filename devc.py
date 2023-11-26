@@ -1,5 +1,6 @@
 import time
 from os import getcwd
+from typing import Optional  # required due to a typer lib limitation
 from typing import Callable
 
 from dotenv import dotenv_values
@@ -132,6 +133,24 @@ def agent_pov() -> None:
             # "agent_pov",
         ]
     )
+
+
+@app.command(short_help="Agent dev entrypoint.")
+def agent_dev() -> None:
+    _, close_fn = spin_db()
+
+    docker.compose.run("agent", tty=True, build=True, command=["agent-dev"])
+
+    close_fn()
+
+
+@app.command(short_help="Gpt estimation costs.")
+def gpt_estimate_costs(experiment_name: Optional[str] = None) -> None:
+    _, close_fn = spin_db()
+
+    docker.compose.run("agent", tty=True, build=True, command=["gpt-estimate-costs"])
+
+    close_fn()
 
 
 if __name__ == "__main__":

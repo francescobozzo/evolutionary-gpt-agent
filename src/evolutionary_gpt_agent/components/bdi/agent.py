@@ -1,6 +1,9 @@
+import json
 import random
+from itertools import chain
 from queue import Queue
 from time import sleep
+from typing import Any
 
 from loguru import logger
 
@@ -21,6 +24,9 @@ from models.mappers import api_event_to_db_event
 _SLEEP_FOR_FIRST_EVENT = 1
 _SLEEP_FOR_EVENTS_BATCH = 1
 _EVENTS_BATCH_SIZE = 3
+_NEW_EVENTS_THRESHOLD = 50
+_EVENTS_RESET_THRESHOLD = 100
+_REFACTORED_PERCEIVER_NAME = "refactored_perceiver"
 
 
 def divide_into_batches(queue: Queue[Event], batch_size: int) -> list[list[Event]]:
@@ -34,6 +40,31 @@ def divide_into_batches(queue: Queue[Event], batch_size: int) -> list[list[Event
             batches[i].append(queue.get())
 
     return batches
+
+
+class EventSet:
+    def __init__(self, new_events_threshold: int, reset_threshold: int) -> None:
+        self._event_types: set[str] = set()
+        self._new_events_threshold = new_events_threshold
+        self._remaining_events = self._new_events_threshold
+        self._reset_threshold = reset_threshold
+
+    def add(self, origin: str) -> None:
+        if origin not in self._event_types:
+            self._remaining_events = self._new_events_threshold
+            self._event_types.add(origin)
+        else:
+            self._remaining_events -= 1
+
+    def should_use_refactored_perceiver(self) -> bool:
+        return self._remaining_events <= 0
+
+    def should_reset(self) -> bool:
+        return self._remaining_events <= -self._reset_threshold
+
+    def reset(self) -> None:
+        self._remaining_events = self._new_events_threshold
+        self._event_types.clear()
 
 
 class Agent:
@@ -65,6 +96,7 @@ class Agent:
         )
 
         self._belief_set = BeliefSet(data={}, experiment=self._experiment)
+        self._refactored_perceiver: Perceiver | None = None
         self._perceiver_version = 0
         self._plan_version = 0
         self._prompt_templates_by_type = load_prompt_templates(
@@ -73,6 +105,9 @@ class Agent:
         self._checkpoint: Checkpoint | None = None
         self._last_event: DbEvent | None = None
         self._plan: list[str] = []
+        self._event_types: EventSet = EventSet(
+            _NEW_EVENTS_THRESHOLD, _EVENTS_RESET_THRESHOLD
+        )
 
     def start_loop(self) -> None:
         first_event: Event | None = self._bdi_loop_setup()
@@ -93,6 +128,8 @@ class Agent:
 
             for batch in event_batches:
                 self._process_event_batch(batch)
+                if self._event_types.should_use_refactored_perceiver():
+                    self._refactor_perceivers()
 
             self._new_plan()
             self._execute_plan()
@@ -108,6 +145,7 @@ class Agent:
             sleep(_SLEEP_FOR_FIRST_EVENT)
 
         event = self._events_queue.get()
+        self._event_types.add(event.origin)
 
         self._current_checkpoint = Checkpoint(
             experiment=self._experiment,
@@ -124,22 +162,39 @@ class Agent:
         db_events = []
 
         for event in events:
+            self._event_types.add(event.origin)
             db_event = api_event_to_db_event(event, self._experiment, self._last_event)
             db_events.append(db_event)
 
             self._last_event = db_event
+
+        if self._event_types.should_reset():
+            self._event_types.reset()
 
         self._db_handler.insert(db_events)
 
         json_events = [e.to_json() for e in events]
         dict_events = [e.to_dict() for e in events]
 
-        perceiver_valid = False
-        while not perceiver_valid:
-            perceiver_name = f"perceiver_{self._perceiver_version}"
-            perceiver_prompt, perceiver_code = self._gpt_client.ask_perceiver(
-                perceiver_name, self._belief_set.data, "\n".join(json_events)
-            )
+        is_perceiver_valid = False
+        while not is_perceiver_valid:
+            if (
+                not self._event_types.should_use_refactored_perceiver()
+                or not self._refactored_perceiver
+            ):
+                perceiver_name = f"perceiver_{self._perceiver_version}"
+                perceiver_prompt, perceiver_code = self._gpt_client.ask_perceiver(
+                    perceiver_name, self._belief_set.data, "\n".join(json_events)
+                )
+            else:
+                if self._refactored_perceiver:
+                    raise Exception(
+                        "Trying to reuse a refactored perceiver that"
+                        " was never initialized."
+                    )
+                perceiver_name = _REFACTORED_PERCEIVER_NAME
+                perceiver_prompt = self._refactored_perceiver.prompt
+                perceiver_code = self._refactored_perceiver.code
 
             FIRST_EVENT_INDEX = 0
             LAST_EVENT_INDEX = -1
@@ -186,12 +241,50 @@ class Agent:
             )
 
             self._db_handler.insert([perceiver_model])
-            self._perceiver_version += 1
-            perceiver_valid = True
+            if perceiver_name != _REFACTORED_PERCEIVER_NAME:
+                self._perceiver_version += 1
+            is_perceiver_valid = True
+
+    def _refactor_perceivers(self) -> None:
+        is_perceiver_valid = False
+        perceivers = self._db_handler.get_all_perceivers(self._experiment)
+        events_by_perceivers = self._db_handler.get_and_group_events_by_perceivers(
+            perceivers
+        )
+
+        dict_events: list[Any] = [
+            json.loads(e.data) for e in chain(*events_by_perceivers.values())
+        ]
+
+        logger.info("refactoring perceivers")
+        while not is_perceiver_valid:
+            perceiver_name = _REFACTORED_PERCEIVER_NAME
+
+            perceiver_prompt, perceiver_code = self._gpt_client.refactor_perceivers(
+                events_by_perceivers, perceiver_name
+            )
+            perceiver = CodeTester(
+                perceiver_code,
+                perceiver_name,
+            )
+
+            if not perceiver.is_valid(
+                events=dict_events, belief_set=self._belief_set.data
+            ):
+                logger.warning("refactored perceiver not valid, trying again.")
+                continue
+
+            perceiver = Perceiver(
+                prompt=perceiver_prompt,
+                code=perceiver_code,
+            )
+
+            self._refactored_perceiver = perceiver
+            is_perceiver_valid = True
 
     def _new_plan(self) -> None:
-        plan_valid = False
-        while not plan_valid:
+        is_plan_valid = False
+        while not is_plan_valid:
             plan_name = f"plan_{self._plan_version}"
             plan_prompt, plan_code = self._gpt_client.ask_plan(
                 plan_name, self._belief_set.data
@@ -225,7 +318,7 @@ class Agent:
 
                 self._db_handler.insert([plan_model])
                 self._plan_version += 1
-                plan_valid = True
+                is_plan_valid = True
 
     def _execute_plan(self) -> None:
         while self._plan:
