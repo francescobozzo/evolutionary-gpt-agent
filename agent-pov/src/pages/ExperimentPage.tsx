@@ -6,6 +6,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { Link } from 'react-router-dom';
 
 type Experiment = {
   name: string;
@@ -41,7 +42,9 @@ export function ExperimentPage() {
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row">
-                {experiment.name}
+                <Link to={`/experiments/${experiment.name}/beliefsets`}>
+                  {experiment.name}
+                </Link>
               </TableCell>
               <TableCell align="right">{experiment.experiment_id}</TableCell>
               <TableCell align="right">{experiment.timestamp}</TableCell>

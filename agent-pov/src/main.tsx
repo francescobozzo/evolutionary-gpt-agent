@@ -14,8 +14,8 @@ import { ExperimentPage } from './pages/ExperimentPage.tsx';
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route path="beliefsets" element={<BeliefsetPage />} />
       <Route path="experiments" element={<ExperimentPage />} />
+      <Route path="experiments/:id/beliefsets" element={<BeliefsetPage />} />
     </Route>,
   ),
 );

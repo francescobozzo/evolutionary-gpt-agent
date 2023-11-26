@@ -1,3 +1,7 @@
+import { useParams } from 'react-router-dom';
+
 export function BeliefsetPage() {
-  return <h1>'Beliefset Page'</h1>;
+  const { id } = useParams();
+
+  return <h1>Beliefset Page: {id}</h1>;
 }
