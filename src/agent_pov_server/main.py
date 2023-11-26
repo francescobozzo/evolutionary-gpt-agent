@@ -2,6 +2,7 @@ from typing import Any, Generator
 
 import uvicorn
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -10,6 +11,19 @@ from agent_pov_server.schemas.experiment import ExperimentBase
 from models.db_handler import DatabaseHandler
 
 _app = FastAPI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:5173",
+]
+
+_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 logger.level("INFO")
 
