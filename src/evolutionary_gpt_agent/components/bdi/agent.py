@@ -13,7 +13,7 @@ from evolutionary_gpt_agent.components.bdi.actuators_handler import (
 from evolutionary_gpt_agent.components.bdi.tester import CodeTester
 from evolutionary_gpt_agent.components.gpt_client import Client, load_prompt_templates
 from models.api import Event
-from models.db.models import BeliefSet, Checkpoint
+from models.db.models import BeliefSet, Checkpoint, CheckpointType
 from models.db.models import Event as DbEvent
 from models.db.models import Experiment, Perceiver
 from models.db.models import Plan as DbPlan
@@ -161,7 +161,7 @@ class Agent:
 
         self._current_checkpoint = Checkpoint(
             experiment=self._experiment,
-            checkpoint_type="begin",
+            checkpoint_type=CheckpointType.BEGIN,
             game_dump=event.game_dump,
         )
 
@@ -232,7 +232,7 @@ class Agent:
 
             self._checkpoint = Checkpoint(
                 experiment=self._experiment,
-                checkpoint_type="perceiver",
+                checkpoint_type=CheckpointType.PERCEIVER,
                 game_dump=self._last_event.game_dump,
             )
 
@@ -324,7 +324,7 @@ class Agent:
 
                 self._checkpoint = Checkpoint(
                     experiment=self._experiment,
-                    checkpoint_type="plan",
+                    checkpoint_type=CheckpointType.PLAN,
                     game_dump=self._last_event.game_dump,
                 )
 
