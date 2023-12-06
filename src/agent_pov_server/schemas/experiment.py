@@ -10,3 +10,10 @@ class ExperimentBase(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class ExperimentDetail(ExperimentBase):
+    num_events: int
+    num_beliefsets: int
+    num_perceivers: int
+    num_plans: int

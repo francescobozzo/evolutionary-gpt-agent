@@ -14,7 +14,7 @@ type Experiment = {
   timestamp: string;
 };
 
-export function ExperimentPage() {
+export function ExperimentListPage() {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function ExperimentPage() {
 
   return (
     <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+      <Table sx={{ minWidth: 650 }} aria-label="experiment list table">
         <TableHead>
           <TableRow>
             <TableCell>Experiment</TableCell>
@@ -42,9 +42,7 @@ export function ExperimentPage() {
               sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
             >
               <TableCell component="th" scope="row">
-                <Link
-                  to={`/experiments/${experiment.experiment_id}/beliefsets`}
-                >
+                <Link to={`/experiments/${experiment.experiment_id}`}>
                   {experiment.name}
                 </Link>
               </TableCell>

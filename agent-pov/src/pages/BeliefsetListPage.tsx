@@ -19,7 +19,7 @@ type Beliefset = {
   experiment_id: number;
 };
 
-export function BeliefsetPage() {
+export function BeliefsetListPage() {
   const { id: experiment_id } = useParams();
 
   const [beliefsets, setBeliefsets] = useState<Beliefset[]>([]);

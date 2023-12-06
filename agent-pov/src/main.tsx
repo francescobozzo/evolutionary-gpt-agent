@@ -1,21 +1,36 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import './global.css';
 import {
   Route,
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
 } from 'react-router-dom';
-import { BeliefsetPage } from './pages/BeliefsetPage.tsx';
-import { ExperimentPage } from './pages/ExperimentPage.tsx';
+import App from './App.tsx';
+import './global.css';
+import { BeliefsetListPage } from './pages/BeliefsetListPage.tsx';
+import { EventListPage } from './pages/EventListPage.tsx';
+import { ExperimentDetailsPage } from './pages/ExperimentDetailsPage.tsx';
+import { ExperimentListPage } from './pages/ExperimentListPage.tsx';
+import { PerceiverListPage } from './pages/PerceiverListPage.tsx';
+import { PlanListPage } from './pages/PlanListPage.tsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route path="experiments" element={<ExperimentPage />} />
-      <Route path="experiments/:id/beliefsets" element={<BeliefsetPage />} />
+      <Route path="/" element={<ExperimentListPage />} />
+      <Route path="experiments" element={<ExperimentListPage />} />
+      <Route path="experiments/:id" element={<ExperimentDetailsPage />} />
+      <Route path="experiments/:id/events" element={<EventListPage />} />
+      <Route
+        path="experiments/:id/beliefsets"
+        element={<BeliefsetListPage />}
+      />
+      <Route
+        path="experiments/:id/perceivers"
+        element={<PerceiverListPage />}
+      />
+      <Route path="experiments/:id/plans" element={<PlanListPage />} />
     </Route>,
   ),
 );
