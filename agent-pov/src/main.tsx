@@ -9,6 +9,7 @@ import {
 import App from './App.tsx';
 import './global.css';
 import { BeliefsetListPage } from './pages/BeliefsetListPage.tsx';
+import { CheckpointTreePage } from './pages/CheckpointTreePage.tsx';
 import { EventListPage } from './pages/EventListPage.tsx';
 import { ExperimentDetailsPage } from './pages/ExperimentDetailsPage.tsx';
 import { ExperimentListPage } from './pages/ExperimentListPage.tsx';
@@ -31,6 +32,10 @@ const router = createBrowserRouter(
         element={<PerceiverListPage />}
       />
       <Route path="experiments/:id/plans" element={<PlanListPage />} />
+      <Route
+        path="experiments/:id/checkpoints"
+        element={<CheckpointTreePage />}
+      />
     </Route>,
   ),
 );

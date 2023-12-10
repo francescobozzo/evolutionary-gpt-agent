@@ -54,7 +54,6 @@ export function ExperimentDetailsPage() {
           counter={experimentDetails?.num_perceivers}
           linkToPage={`/experiments/${experiment_id}/perceivers`}
         />
-
         <ExperimentInfoCard
           title={'Plans'}
           description={
@@ -62,6 +61,12 @@ export function ExperimentDetailsPage() {
           }
           counter={experimentDetails?.num_plans}
           linkToPage={`/experiments/${experiment_id}/plans`}
+        />
+        <ExperimentInfoCard
+          title={'Checkpoints'}
+          description={'Checkpoints Tree'}
+          counter={-1}
+          linkToPage={`/experiments/${experiment_id}/checkpoints`}
         />
       </Stack>
     </>
