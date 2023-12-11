@@ -159,13 +159,14 @@ class Agent:
         event = self._events_queue.get()
         self._event_types.add(event.origin)
 
-        self._current_checkpoint = Checkpoint(
+        self._checkpoint = Checkpoint(
             experiment=self._experiment,
             checkpoint_type=CheckpointType.BEGIN,
             game_dump=event.game_dump,
+            parent=self._checkpoint,
         )
 
-        self._db_handler.insert([self._belief_set, self._current_checkpoint])
+        self._db_handler.insert([self._belief_set, self._checkpoint])
         self._db_handler.refresh()
 
         return event
@@ -234,6 +235,7 @@ class Agent:
                 experiment=self._experiment,
                 checkpoint_type=CheckpointType.PERCEIVER,
                 game_dump=self._last_event.game_dump,
+                parent=self._checkpoint,
             )
 
             previous_belief_set = self._belief_set
@@ -312,7 +314,7 @@ class Agent:
                     plan_name, self._belief_set.data
                 )
             except Exception:
-                logger.warning("unalbe to retrieve a plan")
+                logger.warning("unable to retrieve a plan")
                 continue
 
             plan = CodeTester(plan_code, plan_name)
@@ -326,6 +328,7 @@ class Agent:
                     experiment=self._experiment,
                     checkpoint_type=CheckpointType.PLAN,
                     game_dump=self._last_event.game_dump,
+                    parent=self._checkpoint,
                 )
 
                 self._db_handler.insert([self._checkpoint])

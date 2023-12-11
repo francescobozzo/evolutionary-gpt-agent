@@ -7,6 +7,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from agent_pov_server.dao.beliefset import get_beliefset, get_beliefsets_by_experiment
+from agent_pov_server.dao.checkpoint import get_checkpoint_tree_by_experiment
 from agent_pov_server.dao.experiment import (
     delete_experiment,
     get_all_experiments,
@@ -14,7 +15,7 @@ from agent_pov_server.dao.experiment import (
 )
 from agent_pov_server.dao.perceiver import get_perceiver, get_perceivers_by_experiment
 from agent_pov_server.schemas.beliefset import BeliefsetBase
-from agent_pov_server.schemas.checkpoint import CheckpointAttributesBase, CheckpointBase
+from agent_pov_server.schemas.checkpoint import CheckpointBase
 from agent_pov_server.schemas.experiment import ExperimentBase, ExperimentDetail
 from agent_pov_server.schemas.perceiver import PerceiverBase
 from models.db_handler import DatabaseHandler
@@ -97,35 +98,8 @@ def fetch_perceiver(perceiver_id: int, db: Session = Depends(get_db)) -> Any:
 
 @_app.get("/checkpoints/", response_model=CheckpointBase)
 def fetch_checkpoints(experiment_id: int, db: Session = Depends(get_db)) -> Any:
-    #  TODO: add dao method to extract the checkpoint tree of an experiment
-    db_checkpoints = CheckpointBase(
-        name="test",
-        attributes=CheckpointAttributesBase(
-            id=0,
-            type="perceiver",
-        ),
-        children=[
-            CheckpointBase(
-                name="test",
-                attributes=CheckpointAttributesBase(
-                    id=1,
-                    type="plan",
-                ),
-                children=[
-                    CheckpointBase(
-                        name="test",
-                        attributes=CheckpointAttributesBase(
-                            id=2,
-                            type="perceiver",
-                        ),
-                        children=[],
-                    )
-                ],
-            )
-        ],
-    )
-
-    return db_checkpoints
+    checkpoint_tree = get_checkpoint_tree_by_experiment(db, experiment_id)
+    return checkpoint_tree
 
 
 def main() -> None:
