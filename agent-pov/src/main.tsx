@@ -10,6 +10,7 @@ import App from './App.tsx';
 import './global.css';
 import { BeliefsetListPage } from './pages/BeliefsetListPage.tsx';
 import { CheckpointTreePage } from './pages/CheckpointTreePage.tsx';
+import { BeliefsetDetailsPage } from './pages/BeliefsetDetailsPage.tsx';
 import { EventListPage } from './pages/EventListPage.tsx';
 import { ExperimentDetailsPage } from './pages/ExperimentDetailsPage.tsx';
 import { ExperimentListPage } from './pages/ExperimentListPage.tsx';
@@ -36,6 +37,7 @@ const router = createBrowserRouter(
         path="experiments/:id/checkpoints"
         element={<CheckpointTreePage />}
       />
+      <Route path="beliefset/:id" element={<BeliefsetDetailsPage />} />
     </Route>,
   ),
 );

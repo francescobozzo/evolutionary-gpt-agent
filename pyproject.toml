@@ -53,6 +53,7 @@ dependencies = [
   "toml == 0.10.2",
   "numpy", # most of the time gpt returns code that contain numpy code
   "tiktoken", # count tokens provided to gpt
+  "matplotlib >= 3.8"
 ]
 
 [project.optional-dependencies]

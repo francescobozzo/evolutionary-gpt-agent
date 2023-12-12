@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Grid,
   List,
   ListItem,
@@ -8,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -61,10 +62,18 @@ export function BeliefsetListPage() {
       <Grid item xs={9}>
         <Box height={'100vh'}>
           {selectedIndex ? (
-            <SyntaxHighlighter language="json" showLineNumbers style={docco}>
-              {JSON.stringify(beliefsets[selectedIndex].data, undefined, 4) ??
-                '{}'}
-            </SyntaxHighlighter>
+            <>
+              <Link
+                to={`/beliefset/${beliefsets[selectedIndex].belief_set_id}`}
+              >
+                <Button variant="contained">Details</Button>
+              </Link>
+
+              <SyntaxHighlighter language="json" showLineNumbers style={docco}>
+                {JSON.stringify(beliefsets[selectedIndex].data, undefined, 4) ??
+                  '{}'}
+              </SyntaxHighlighter>
+            </>
           ) : null}
         </Box>
       </Grid>

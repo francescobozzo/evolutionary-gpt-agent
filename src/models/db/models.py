@@ -5,6 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import now
 from sqlalchemy_json import NestedMutableJson
+from sqlalchemy.types import LargeBinary
 
 
 class CheckpointType(str, Enum):
@@ -78,6 +79,7 @@ class BeliefSet(Base):
     data: Mapped[dict] = mapped_column(NestedMutableJson, default={})
     experiment_id: Mapped[int] = mapped_column(ForeignKey("experiments.experiment_id"))
     experiment: Mapped[Experiment] = relationship(back_populates="belief_sets")
+    representation: Mapped[LargeBinary] = mapped_column(LargeBinary, nullable=True)
     # input_perceivers: Mapped[list["Perceiver"]] = relationship(
     #     back_populates="belief_set_input"
     # )

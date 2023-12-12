@@ -6,7 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from agent_pov_server.dao.beliefset import get_beliefset, get_beliefsets_by_experiment
+from agent_pov_server.dao.beliefset import (
+    get_beliefset,
+    get_beliefsets_by_experiment,
+    generate_beliefset_representation,
+)
 from agent_pov_server.dao.checkpoint import get_checkpoint_tree_by_experiment
 from agent_pov_server.dao.experiment import (
     delete_experiment,
@@ -19,6 +23,8 @@ from agent_pov_server.schemas.checkpoint import CheckpointBase
 from agent_pov_server.schemas.experiment import ExperimentBase, ExperimentDetail
 from agent_pov_server.schemas.perceiver import PerceiverBase
 from models.db_handler import DatabaseHandler
+import base64
+from collections import defaultdict
 
 _app = FastAPI()
 
@@ -34,6 +40,8 @@ _app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_app.computing_belief_set_representation: dict[int, bool] = defaultdict(lambda: False)
 
 logger.level("INFO")
 
@@ -81,7 +89,26 @@ def fetch_beliefsets(experiment_id: int, db: Session = Depends(get_db)) -> Any:
 @_app.get("/beliefsets/{beliefset_id}", response_model=BeliefsetBase)
 def fetch_beliefset(beliefset_id: int, db: Session = Depends(get_db)) -> Any:
     db_beliefset = get_beliefset(db, beliefset_id)
+    if db_beliefset.representation is not None:
+        db_beliefset.representation = base64.b64encode(db_beliefset.representation)
     return db_beliefset
+
+
+@_app.get("/beliefsets/{beliefset_id}/representation", response_model=dict[str, bool])
+def ask_beliefset_representation(
+    beliefset_id: int, db: Session = Depends(get_db)
+) -> Any:
+    db_beliefset = get_beliefset(db, beliefset_id)
+
+    if db_beliefset.representation is not None:
+        return {"ready": True}
+
+    if not _app.computing_belief_set_representation[db_beliefset.belief_set_id]:
+        _app.computing_belief_set_representation[db_beliefset.belief_set_id] = True
+        generate_beliefset_representation(db, db_beliefset)
+        return {"ready": True}
+
+    return {"ready": False}
 
 
 @_app.get("/perceivers/", response_model=list[PerceiverBase])

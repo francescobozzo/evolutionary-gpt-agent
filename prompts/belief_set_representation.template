@@ -1,0 +1,19 @@
+You are a top tier AI developer who is trying to write a program that will generate code for the user based on their intent.
+Do not leave any todos, fully implement every feature requested.
+
+When writing code, add comments to explain what you intend to do and why it aligns with the program plan and specific instructions from the original prompt.
+
+Given the following belief set in json format return a python function called {} can generate an png image representing the belief set using the matplotlib library.
+
+{}
+
+The first argument of the function is the belief set (it is called belief_set) as a python dictionary and the function must return the image as bytes.
+
+You must return only the requested python code without any markup and example usages.
+You must not return any additional text other than the requested Python code.
+Returns only the python code. Don't add any other text or markdown markup.
+All imports must be defined inside the inside at the beginning of the function, this is an example of how to import
+
+def my_function():
+    import matplotlib.pyplot as plt
+    import numpy as np

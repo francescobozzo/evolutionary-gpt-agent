@@ -8,6 +8,7 @@ WORKDIR /agent_pov_server
 COPY ./pyproject.toml /agent_pov_server/pyproject.toml
 RUN pip3 install .
 
+COPY ./prompts /prompts
 COPY ./src /agent_pov_server/src
 RUN pip3 install --no-deps .
 

@@ -22,6 +22,7 @@ _NEW_PERCEIVER_PROMPT_PATH = f"{_PROMPT_DIR}/new_perceiver.template"
 _REFACTOR_PERCEIVER_PROMPT_PATH = f"{_PROMPT_DIR}/refactor_perceiver.template"
 _NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/single_goal.template"
 _EXPAND_NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/expand_single_goal.template"
+_BELIEF_SET_PROMPT_PATH = f"{_PROMPT_DIR}/belief_set_representation.template"
 
 
 def load_prompt_templates(
@@ -110,6 +111,11 @@ class _Goal(BaseModel):
     text: str
 
 
+class _BeliefSetRepresenation(BaseModel):
+    python_code: str
+    description: str | None
+
+
 class Client:
     def __init__(
         self,
@@ -146,6 +152,7 @@ class Client:
         self._expand_new_goal_prompt = _load_prompt(
             _EXPAND_NEW_GOAL_PROMPT_PATH, prompt_prefix
         )
+        self._belief_set_representation = _load_prompt(_BELIEF_SET_PROMPT_PATH, "")
 
     def ask_perceiver(
         self, function_name: str, belief_set: dict[Any, Any], events: str
@@ -262,6 +269,22 @@ class Client:
         )
 
         return prompt, perceiver.python_code
+
+    def ask_belief_set_represenation_generator(
+        self, function_name: str, belief_set: dict[Any, Any]
+    ) -> str:
+        prompt = self._belief_set_representation.format(
+            function_name, json.dumps(belief_set)
+        )
+
+        representationGenerator = self._client.chat.completions.create(
+            model=self._model,
+            response_model=_BeliefSetRepresenation,
+            max_retries=5,
+            messages=[{"role": self._role, "content": prompt}],
+        )
+
+        return representationGenerator.python_code
 
     # def ask_discussion(
     #     self,
