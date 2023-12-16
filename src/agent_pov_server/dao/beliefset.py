@@ -1,4 +1,5 @@
 from os import getenv
+from typing import Any
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -8,7 +9,7 @@ from evolutionary_gpt_agent.components.gpt_client import Client
 from models.db.models import BeliefSet
 
 
-def get_beliefset(db: Session, beliefset_id: int) -> BeliefSet | None:
+def get_beliefset(db: Session, beliefset_id: int) -> BeliefSet | Any:
     db_beliefset = (
         db.query(BeliefSet).filter(BeliefSet.belief_set_id == beliefset_id).first()
     )
@@ -25,13 +26,24 @@ def get_beliefsets_by_experiment(db: Session, experiment_id: int) -> list[Belief
 def generate_beliefset_representation(
     db: Session,
     beliefset: BeliefSet,
-) -> bytes:
+) -> None:
     openai_api_key = getenv("OPENAI_API_KEY")
     openai_api_base = getenv("OPENAI_API_BASE")
     openai_api_type = getenv("OPENAI_API_TYPE")
     openai_api_version = getenv("OPENAI_API_VERSION")
     openai_deployment = getenv("OPENAI_DEPLOYMENT")
     openai_model = getenv("OPENAI_MODEL")
+
+    if (
+        not openai_api_key
+        or not openai_api_base
+        or not openai_api_type
+        or not openai_api_version
+        or not openai_deployment
+        or not openai_model
+    ):
+        raise Exception("missing value in the .env config file, see .env.sample")
+
     gpt_client = Client(
         openai_api_key,
         openai_api_base,
@@ -67,7 +79,7 @@ def generate_beliefset_representation(
 
 def _save_beliefset_representation(
     db: Session, beliefset: BeliefSet, represenation: bytes
-):
+) -> None:
     beliefset.representation = represenation
     db.add(beliefset)
     db.commit()

@@ -1,9 +1,11 @@
+from typing import Any
+
 from sqlalchemy.orm import Session
 
 from models.db.models import Perceiver
 
 
-def get_perceiver(db: Session, perceiver_id: int) -> Perceiver | None:
+def get_perceiver(db: Session, perceiver_id: int) -> Perceiver | Any:
     db_perceiver = (
         db.query(Perceiver).filter(Perceiver.perceiver_id == perceiver_id).first()
     )

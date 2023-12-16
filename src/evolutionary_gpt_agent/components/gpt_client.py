@@ -284,6 +284,9 @@ class Client:
             messages=[{"role": self._role, "content": prompt}],
         )
 
+        if not isinstance(representationGenerator.python_code, str):
+            raise BaseException("The python code returned by gpt should be str")
+
         return representationGenerator.python_code
 
     # def ask_discussion(
