@@ -38,18 +38,25 @@ export function BeliefsetDetailsPage() {
     return () => {}; // cleanup function
   }, []);
 
-  const generateRepresentation = () => {
+  const generateRepresentation = (finalizeFunc: () => void) => {
     fetch(`http://localhost:9876/beliefsets/${belief_set_id}/representation`)
       .then((res) => res.json())
+      .then((data) =>
+        data.ready
+          ? () => {
+              finalizeFunc();
+              fetchBeliefSet(belief_set_id, setBeliefset);
+            }
+          : () => {},
+      )
       .catch((err) => console.error(err));
-    fetchBeliefSet(belief_set_id, setBeliefset);
     return () => {};
   };
 
   return (
     <>
       <Typography variant="h4" component="div" textAlign={'center'} my={2}>
-        WIP: Beliefset {belief_set_id} for experiment {beliefset?.experiment_id}
+        Beliefset {belief_set_id} for experiment {beliefset?.experiment_id}
       </Typography>
       <Stack spacing={2} mx={4}>
         <BeliefsetDetailsCard

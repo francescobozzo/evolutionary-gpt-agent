@@ -17,7 +17,7 @@ interface BeliefsetDetailsCardProps {
   title: string;
   data: any;
   representation: any;
-  generateRepresentationCallback: () => () => void;
+  generateRepresentationCallback: (finalizeFunc: () => void) => void;
 }
 
 export default function BeliefsetDetailsCard(props: BeliefsetDetailsCardProps) {
@@ -35,8 +35,10 @@ export default function BeliefsetDetailsCard(props: BeliefsetDetailsCardProps) {
 
   const fetchRepresentation = () => {
     setIsComputingRepresentation(true);
-    props.generateRepresentationCallback();
-    setIsComputingRepresentation(false);
+    props.generateRepresentationCallback(() => {
+      setIsComputingRepresentation(false);
+    });
+    return () => {};
   };
 
   return (
@@ -56,33 +58,14 @@ export default function BeliefsetDetailsCard(props: BeliefsetDetailsCardProps) {
         {props.representation ? (
           <img src={`data:image/png;base64, ${props.representation}`} />
         ) : (
-          <Box sx={{ m: 1, position: 'relative', alignItems: 'center' }}>
-            <CircularProgress
-              size={24}
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                marginTop: '-9px',
-                marginLeft: '-12px',
-              }}
-            />
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: 'calc(50% - 12.5%)',
-                marginTop: '-12px',
-                marginLeft: '-12px',
-              }}
-              disabled={isComputingRepresentation}
-              onClick={() => fetchRepresentation()}
-            >
-              Generate representation
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            size="small"
+            disabled={isComputingRepresentation}
+            onClick={() => fetchRepresentation()}
+          >
+            Generate representation
+          </Button>
         )}
       </Stack>
     </>

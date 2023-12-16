@@ -4,8 +4,8 @@ from enum import Enum
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import now
-from sqlalchemy_json import NestedMutableJson
 from sqlalchemy.types import LargeBinary
+from sqlalchemy_json import NestedMutableJson
 
 
 class CheckpointType(str, Enum):

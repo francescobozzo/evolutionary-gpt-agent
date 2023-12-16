@@ -1,3 +1,5 @@
+import base64
+from collections import defaultdict
 from typing import Any, Generator
 
 import uvicorn
@@ -7,9 +9,9 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from agent_pov_server.dao.beliefset import (
+    generate_beliefset_representation,
     get_beliefset,
     get_beliefsets_by_experiment,
-    generate_beliefset_representation,
 )
 from agent_pov_server.dao.checkpoint import get_checkpoint_tree_by_experiment
 from agent_pov_server.dao.experiment import (
@@ -23,8 +25,6 @@ from agent_pov_server.schemas.checkpoint import CheckpointBase
 from agent_pov_server.schemas.experiment import ExperimentBase, ExperimentDetail
 from agent_pov_server.schemas.perceiver import PerceiverBase
 from models.db_handler import DatabaseHandler
-import base64
-from collections import defaultdict
 
 _app = FastAPI()
 
@@ -106,6 +106,8 @@ def ask_beliefset_representation(
     if not _app.computing_belief_set_representation[db_beliefset.belief_set_id]:
         _app.computing_belief_set_representation[db_beliefset.belief_set_id] = True
         generate_beliefset_representation(db, db_beliefset)
+        _app.computing_belief_set_representation[db_beliefset.belief_set_id] = False
+
         return {"ready": True}
 
     return {"ready": False}

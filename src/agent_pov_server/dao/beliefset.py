@@ -1,13 +1,11 @@
-from sqlalchemy.orm import Session
-
-from models.db.models import BeliefSet
-from evolutionary_gpt_agent.components.bdi.tester import CodeTester
-
 from os import getenv
-from evolutionary_gpt_agent.components.gpt_client import Client
-from typing import Any
 
 from loguru import logger
+from sqlalchemy.orm import Session
+
+from evolutionary_gpt_agent.components.bdi.tester import CodeTester
+from evolutionary_gpt_agent.components.gpt_client import Client
+from models.db.models import BeliefSet
 
 
 def get_beliefset(db: Session, beliefset_id: int) -> BeliefSet | None:
@@ -47,7 +45,7 @@ def generate_beliefset_representation(
     is_generator_valid = False
     while not is_generator_valid:
         logger.info(
-            f"asking for a new representation a belief set {beliefset.belief_set_id}"
+            f"asking for a new representation for belief set {beliefset.belief_set_id}"
         )
 
         function_name = "bf_representation_generator"
