@@ -78,6 +78,35 @@ class DatabaseHandler:
             ).all()
         ]
 
+    def get_all_beliefsets(self, experiment: Experiment) -> list[BeliefSet]:
+        return [
+            row[0]
+            for row in self._session.execute(
+                select(BeliefSet).where(BeliefSet.experiment == experiment)
+            ).all()
+        ]
+
+    def get_one_event_by_type_until_belief_set(
+        self, belief_set: BeliefSet
+    ) -> list[Event]:
+        perceiver = self._session.execute(
+            select(Perceiver).where(
+                Perceiver.belief_set_output_id == belief_set.belief_set_id
+            )
+        ).first()[0]
+        events = [
+            row[0]
+            for row in self._session.execute(
+                select(Event).where(Event.event_id <= perceiver.end_event_id)
+            ).all()
+        ]
+
+        event_by_type = {}
+        for e in events:
+            event_by_type[e.origin] = e
+
+        return list(event_by_type.values())
+
     def get_and_group_events_by_perceivers(
         self, perceivers: list[Perceiver]
     ) -> dict[Perceiver, list[Event]]:

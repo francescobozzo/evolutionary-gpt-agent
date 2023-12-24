@@ -1,0 +1,14 @@
+You are a top tier AI developer who is trying to write a program that will generate code for the user based on their intent.
+Do not leave any todos, fully implement every feature requested.
+
+
+The agent knowledge is stored inside one belief set where the belief set is obtained from events collected from the environment.
+Given the diff that there is between two consecutive belief sets that represent the environment in two consecutive instants
+
+{}
+
+and the following event types (you collected many of them, only a subset is provided in the prompt). Do you think that these event types are enough to build the belief sets?
+
+Analyze the origin and the description of each event to understand the answer.
+
+The answer must be a boolean and an explanation (the explanation is optional)

@@ -7,6 +7,7 @@ import tiktoken
 from pydantic import BaseModel
 
 from models.db.models import Event, Experiment, Perceiver, PromptTemplate
+from models.mappers import db_event_to_api_event
 
 
 def _load_prompt(prompt: str, prefix: str) -> str:
@@ -23,6 +24,8 @@ _REFACTOR_PERCEIVER_PROMPT_PATH = f"{_PROMPT_DIR}/refactor_perceiver.template"
 _NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/single_goal.template"
 _EXPAND_NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/expand_single_goal.template"
 _BELIEF_SET_PROMPT_PATH = f"{_PROMPT_DIR}/belief_set_representation.template"
+_IS_EVENT_MISSING_PROMPT_PATH = f"{_PROMPT_DIR}/is_event_missing.prompt"
+_NEW_INFERENCED_EVENT_PROMPT_PATH = f"{_PROMPT_DIR}/new_inferenced_event.template"
 
 
 def load_prompt_templates(
@@ -55,6 +58,16 @@ def load_prompt_templates(
             experiment=experiment,
             template_type="refactor_perceiver",
             template=_REFACTOR_PERCEIVER_PROMPT,
+        ),
+        "is_event_missing": PromptTemplate(
+            experiment=experiment,
+            template_type="is_event_type",
+            template=_IS_EVENT_MISSING_PROMPT_PATH,
+        ),
+        "new_inferenced_event": PromptTemplate(
+            experiment=experiment,
+            template_type="new_inferenced_event",
+            template=_NEW_INFERENCED_EVENT_PROMPT_PATH,
         ),
     }
 
@@ -116,6 +129,16 @@ class _BeliefSetRepresenation(BaseModel):
     description: str | None
 
 
+class _IsEventMissing(BaseModel):
+    is_missing: bool
+    explanation: str | None
+
+
+class _EventGenerator(BaseModel):
+    python_code: str
+    description: str | None
+
+
 class Client:
     def __init__(
         self,
@@ -153,6 +176,8 @@ class Client:
             _EXPAND_NEW_GOAL_PROMPT_PATH, prompt_prefix
         )
         self._belief_set_representation = _load_prompt(_BELIEF_SET_PROMPT_PATH, "")
+        self._is_event_missing = _load_prompt(_IS_EVENT_MISSING_PROMPT_PATH, "")
+        self._new_inferenced_event = _load_prompt(_NEW_INFERENCED_EVENT_PROMPT_PATH, "")
 
     def ask_perceiver(
         self, function_name: str, belief_set: dict[Any, Any], events: str
@@ -288,6 +313,46 @@ class Client:
             raise BaseException("The python code returned by gpt should be str")
 
         return representationGenerator.python_code
+
+    def is_event_missing(self, diff: Any, events: list[Event]) -> tuple[str, bool]:
+        prompt = self._is_event_missing.format(
+            diff,
+            "\n".join([db_event_to_api_event(e).to_json() for e in events]),
+        )
+
+        answer = self._client.chat.completions.create(
+            model=self._model,
+            response_model=_IsEventMissing,
+            max_retries=5,
+            messages=[{"role": self._role, "content": prompt}],
+        )
+
+        return prompt, answer.is_missing
+
+    def new_event_generator(
+        self,
+        belief_set_A: dict[str, Any],
+        belief_set_B: dict[str, Any],
+        diff: Any,
+        function_name: str,
+        events: list[Event],
+    ) -> tuple[str, str]:
+        prompt = self._new_inferenced_event.format(
+            json.dumps(belief_set_A),
+            json.dumps(belief_set_B),
+            diff,
+            function_name,
+            "\n".join([db_event_to_api_event(e).to_json() for e in events]),
+        )
+
+        new_event_generator = self._client.chat.completions.create(
+            model=self._model,
+            response_model=_EventGenerator,
+            max_retries=5,
+            messages=[{"role": self._role, "content": prompt}],
+        )
+
+        return prompt, new_event_generator.python_code
 
     # def ask_discussion(
     #     self,

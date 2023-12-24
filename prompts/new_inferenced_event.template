@@ -1,0 +1,30 @@
+You are a top tier AI developer who is trying to write a program that will generate code for the user based on their intent.
+Do not leave any todos, fully implement every feature requested.
+
+
+Given the following two belief sets
+
+{}
+
+{}
+
+and the diff between them
+
+{}
+
+generate python function called {}
+that creates a new event that describes the difference in the two provided belief sets. The new event must share the structure of the following events.
+
+{}
+
+The first argument of the function is the first belief set (it must be called belief_set_A), the second argument is the second belief set (it must be called belief_set_B) and the function must return an event
+as a json with the following keys:
+
+* origin
+* description
+* data
+
+You must return only the requested python code without any markup and example usages.
+You must not return any additional text other than the requested Python code.
+Returns only the python code. Don't add any other text or markdown markup.
+The only library you can use is DeepDiff.

@@ -1,9 +1,11 @@
+import json
 from os import getenv
 from queue import Queue
 from threading import Thread
 from typing import cast
 
 import toml
+from deepdiff import DeepDiff
 
 from evolutionary_gpt_agent.components.bdi.actuators_handler import GameConfig
 from evolutionary_gpt_agent.components.bdi.agent import Agent
@@ -25,6 +27,29 @@ def perceivers_refactoring(agent: Agent) -> None:
     )
 
 
+def inference_rule(agent: Agent) -> None:
+    experiment = agent._db_handler.get_experiment_by_name("A6DBB3878D80D81C")
+    belief_sets = agent._db_handler.get_all_beliefsets(experiment)
+
+    belief_set_A = json.loads(json.dumps(dict(belief_sets[1].data)))
+    belief_set_B = json.loads(json.dumps(dict(belief_sets[2].data)))
+    # belief_set_B.data["spikes"] = [{"x": 0, "y": 1}, {"x": 5, "y": 5}]
+    belief_set_B["agents sensing"] = {"agents": [{"x": 0, "y": 1}, {"x": 5, "y": 5}]}
+
+    diff = DeepDiff(belief_set_A, belief_set_B, ignore_order=True)
+    events = agent._db_handler.get_one_event_by_type_until_belief_set(belief_sets[2])
+
+    prompt, is_event_missing = agent._gpt_client.is_event_missing(diff, events)
+
+    prompt, event_generator = agent._gpt_client.new_event_generator(
+        belief_set_A, belief_set_B, diff, "generate_event", events
+    )
+
+    import pdb
+
+    pdb.set_trace()
+
+
 def main() -> None:
     events_queue: Queue[Event] = Queue()
 
@@ -38,6 +63,7 @@ def main() -> None:
     openai_deployment = getenv("OPENAI_DEPLOYMENT")
     openai_model = getenv("OPENAI_MODEL")
     game_config_raw = toml.load("./game_configuration.toml")
+
     game_config = cast(GameConfig, game_config_raw)
 
     if (
@@ -65,4 +91,5 @@ def main() -> None:
         openai_model,
         game_config,
     )
-    perceivers_refactoring(agent)
+    # perceivers_refactoring(agent)
+    inference_rule(agent)
