@@ -26,6 +26,7 @@ _EXPAND_NEW_GOAL_PROMPT_PATH = f"{_PROMPT_DIR}/expand_single_goal.template"
 _BELIEF_SET_PROMPT_PATH = f"{_PROMPT_DIR}/belief_set_representation.template"
 _IS_EVENT_MISSING_PROMPT_PATH = f"{_PROMPT_DIR}/is_event_missing.prompt"
 _NEW_INFERENCED_EVENT_PROMPT_PATH = f"{_PROMPT_DIR}/new_inferenced_event.template"
+_NEW_CONSISTENCY_RULE_PROMPT_PATH = f"{_PROMPT_DIR}/new_consistency_rule.template"
 
 
 def load_prompt_templates(
@@ -68,6 +69,11 @@ def load_prompt_templates(
             experiment=experiment,
             template_type="new_inferenced_event",
             template=_NEW_INFERENCED_EVENT_PROMPT_PATH,
+        ),
+        "new_consistency_rule": PromptTemplate(
+            experiment=experiment,
+            template_type="new_consistency_rule",
+            template=_NEW_CONSISTENCY_RULE_PROMPT_PATH,
         ),
     }
 
@@ -139,6 +145,11 @@ class _EventGenerator(BaseModel):
     description: str | None
 
 
+class _ConsistencyRule(BaseModel):
+    python_code: str
+    description: str | None
+
+
 class Client:
     def __init__(
         self,
@@ -178,6 +189,7 @@ class Client:
         self._belief_set_representation = _load_prompt(_BELIEF_SET_PROMPT_PATH, "")
         self._is_event_missing = _load_prompt(_IS_EVENT_MISSING_PROMPT_PATH, "")
         self._new_inferenced_event = _load_prompt(_NEW_INFERENCED_EVENT_PROMPT_PATH, "")
+        self._new_consistency_rule = _load_prompt(_NEW_CONSISTENCY_RULE_PROMPT_PATH, "")
 
     def ask_perceiver(
         self, function_name: str, belief_set: dict[Any, Any], events: str
@@ -353,6 +365,23 @@ class Client:
         )
 
         return prompt, new_event_generator.python_code
+
+    def new_consistency_rule(
+        self, belief_set: dict[str, Any], function_name: str
+    ) -> tuple[str, str]:
+        prompt = self._new_consistency_rule.format(
+            function_name,
+            belief_set,
+        )
+
+        consistency_rule = self._client.chat.completions.create(
+            model=self._model,
+            response_model=_ConsistencyRule,
+            max_retries=5,
+            messages=[{"role": self._role, "content": prompt}],
+        )
+
+        return prompt, consistency_rule.python_code
 
     # def ask_discussion(
     #     self,

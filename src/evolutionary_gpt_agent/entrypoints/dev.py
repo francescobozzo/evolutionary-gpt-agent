@@ -31,6 +31,10 @@ def inference_rule(agent: Agent) -> None:
     experiment = agent._db_handler.get_experiment_by_name("A6DBB3878D80D81C")
     belief_sets = agent._db_handler.get_all_beliefsets(experiment)
 
+    import pdb
+
+    pdb.set_trace()
+
     belief_set_A = json.loads(json.dumps(dict(belief_sets[1].data)))
     belief_set_B = json.loads(json.dumps(dict(belief_sets[2].data)))
     # belief_set_B.data["spikes"] = [{"x": 0, "y": 1}, {"x": 5, "y": 5}]
@@ -43,6 +47,19 @@ def inference_rule(agent: Agent) -> None:
 
     prompt, event_generator = agent._gpt_client.new_event_generator(
         belief_set_A, belief_set_B, diff, "generate_event", events
+    )
+
+    import pdb
+
+    pdb.set_trace()
+
+
+def consistency_rule(agent: Agent) -> None:
+    experiment = agent._db_handler.get_experiment_by_name("A6DBB3878D80D81C")
+    belief_sets = agent._db_handler.get_all_beliefsets(experiment)
+
+    prompt, consistency_rule = agent._gpt_client.new_consistency_rule(
+        belief_sets[-1], "check_sat"
     )
 
     import pdb
@@ -92,4 +109,5 @@ def main() -> None:
         game_config,
     )
     # perceivers_refactoring(agent)
-    inference_rule(agent)
+    # inference_rule(agent)
+    consistency_rule(agent)

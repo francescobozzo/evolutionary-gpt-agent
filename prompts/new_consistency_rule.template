@@ -1,0 +1,17 @@
+You are a top tier AI developer who is trying to write a program that will generate code for the user based on their intent.
+Do not leave any todos, fully implement every feature requested.
+
+You have a belief set expressed as a python dictionary, where the belief set is a collection of information. Your goal is to verify if the belief set contains data that can be trusted. Let's make an example: a good belief set can assert A and B, a bad one can't assert A and not A since they are opposite information.
+
+You have to provide a python function called {} that takes as argument the belief set and return the satisfiability of the belief set. In order to do that you can use the pysat library to convert the dictionary into a CNF formula.
+
+The function must return true or false, where true means satisfiable.
+
+The belief set is:
+
+{}
+
+You must return only the requested python code without any markup and example usages.
+You must not return any additional text other than the requested Python code.
+Returns only the python code. Don't add any other text or markdown markup.
+The only library you can use is pysat and all imports must be specified inside the function.

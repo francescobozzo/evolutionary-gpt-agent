@@ -54,7 +54,8 @@ dependencies = [
   "numpy", # most of the time gpt returns code that contain numpy code
   "tiktoken", # count tokens provided to gpt
   "matplotlib >= 3.8",
-  "deepdiff >= 6"
+  "deepdiff >= 6",
+  "python-sat == 0.1.8.dev12"
 ]
 
 [project.optional-dependencies]
