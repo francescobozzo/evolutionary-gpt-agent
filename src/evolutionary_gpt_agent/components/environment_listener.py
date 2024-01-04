@@ -4,7 +4,7 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI
 
-from models.api import Event
+from data_model.api import Event
 
 _app = FastAPI()
 

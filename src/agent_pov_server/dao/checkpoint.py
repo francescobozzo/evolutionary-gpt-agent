@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from agent_pov_server.schemas.checkpoint import CheckpointAttributesBase, CheckpointBase
-from models.db.models import Checkpoint as CheckpointDb
+from data_model.db.models import Checkpoint as CheckpointDb
 
 
 def get_checkpoint_tree_by_experiment(

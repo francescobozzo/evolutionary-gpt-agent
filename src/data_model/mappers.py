@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from models.api import Event as ApiEvent
-from models.db.models import Event as DbEvent
-from models.db.models import Experiment
+from data_model.api import Event as ApiEvent
+from data_model.db.models import Event as DbEvent
+from data_model.db.models import Experiment
 
 
 def api_event_to_db_event(

@@ -24,7 +24,7 @@ from agent_pov_server.schemas.beliefset import BeliefsetBase
 from agent_pov_server.schemas.checkpoint import CheckpointBase
 from agent_pov_server.schemas.experiment import ExperimentBase, ExperimentDetail
 from agent_pov_server.schemas.perceiver import PerceiverBase
-from models.db_handler import DatabaseHandler
+from data_model.db_handler import DatabaseHandler
 
 _app = FastAPI()
 

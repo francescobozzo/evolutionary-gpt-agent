@@ -7,10 +7,10 @@ from typing import cast
 import toml
 from deepdiff import DeepDiff
 
+from data_model.api import Event
 from evolutionary_gpt_agent.components.bdi.actuators_handler import GameConfig
 from evolutionary_gpt_agent.components.bdi.agent import Agent
 from evolutionary_gpt_agent.components.environment_listener import init_listener
-from models.api import Event
 
 
 def perceivers_refactoring(agent: Agent) -> None:

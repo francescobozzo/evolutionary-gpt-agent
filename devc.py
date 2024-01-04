@@ -39,13 +39,13 @@ def new_migration(name: str) -> None:
         remove=True,
         volumes=[
             (
-                getcwd() + "/src/models",
-                "/evolutionary_gpt_agent/src/models",
+                getcwd() + "/src/data_model",
+                "/evolutionary_gpt_agent/src/data_model",
             )
         ],
         envs=config,
         networks=["evolutionary-gpt-agent_default"],
-        workdir="/evolutionary_gpt_agent/src/models/db",
+        workdir="/evolutionary_gpt_agent/src/data_model/db",
         command=["alembic", "revision", "--autogenerate", "-m", name],
     )
 
@@ -61,7 +61,7 @@ def upgrade() -> None:
     docker.compose.run(
         service="agent",
         remove=True,
-        workdir="/evolutionary_gpt_agent/src/models/db",
+        workdir="/evolutionary_gpt_agent/src/data_model/db",
         command=["alembic", "upgrade", "head"],
     )
 
@@ -77,7 +77,7 @@ def downgrade() -> None:
     docker.compose.run(
         service="agent",
         remove=True,
-        workdir="/evolutionary_gpt_agent/src/models/db",
+        workdir="/evolutionary_gpt_agent/src/data_model/db",
         command=["alembic", "downgrade", "-1"],
     )
 

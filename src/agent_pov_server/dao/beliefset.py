@@ -4,9 +4,9 @@ from typing import Any
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from data_model.db.models import BeliefSet
 from evolutionary_gpt_agent.components.bdi.tester import CodeTester
 from evolutionary_gpt_agent.components.gpt_client import Client
-from models.db.models import BeliefSet
 
 
 def get_beliefset(db: Session, beliefset_id: int) -> BeliefSet | Any:

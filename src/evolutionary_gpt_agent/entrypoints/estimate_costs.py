@@ -3,8 +3,8 @@ from typing import Optional, no_type_check  # required due to a typer lib limita
 import tiktoken
 from typer import Typer
 
-from models.db.models import Experiment
-from models.db_handler import DatabaseHandler
+from data_model.db.models import Experiment
+from data_model.db_handler import DatabaseHandler
 
 app = Typer()
 

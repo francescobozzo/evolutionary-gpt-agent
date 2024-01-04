@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from models.db.models import (
+from data_model.db.models import (
     BeliefSet,
     Checkpoint,
     Event,

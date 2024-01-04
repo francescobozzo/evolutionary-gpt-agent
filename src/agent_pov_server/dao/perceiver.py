@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from models.db.models import Perceiver
+from data_model.db.models import Perceiver
 
 
 def get_perceiver(db: Session, perceiver_id: int) -> Perceiver | Any:

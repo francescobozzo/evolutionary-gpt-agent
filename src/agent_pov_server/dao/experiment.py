@@ -4,7 +4,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from agent_pov_server.schemas.experiment import ExperimentDetail
-from models.db.models import Experiment
+from data_model.db.models import Experiment
 
 
 def get_all_experiments(db: Session) -> list[Experiment]:

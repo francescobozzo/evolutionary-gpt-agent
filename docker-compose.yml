@@ -36,7 +36,7 @@ services:
       dockerfile: ./docker-images/evolutionary_gpt_agent
     env_file:
       - .env
-    working_dir: /evolutionary_gpt_agent/src/models/db
+    working_dir: /evolutionary_gpt_agent/src/data_model/db
     command: ["alembic", "upgrade", "head"]
     depends_on:
       db:

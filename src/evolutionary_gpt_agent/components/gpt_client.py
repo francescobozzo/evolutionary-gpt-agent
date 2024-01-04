@@ -6,8 +6,8 @@ import openai
 import tiktoken
 from pydantic import BaseModel
 
-from models.db.models import Event, Experiment, Perceiver, PromptTemplate
-from models.mappers import db_event_to_api_event
+from data_model.db.models import Event, Experiment, Perceiver, PromptTemplate
+from data_model.mappers import db_event_to_api_event
 
 
 def _load_prompt(prompt: str, prefix: str) -> str:

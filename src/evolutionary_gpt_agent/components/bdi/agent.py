@@ -6,19 +6,19 @@ from typing import Any
 
 from loguru import logger
 
+from data_model.api import Event
+from data_model.db.models import BeliefSet, Checkpoint, CheckpointType
+from data_model.db.models import Event as DbEvent
+from data_model.db.models import Experiment, Perceiver
+from data_model.db.models import Plan as DbPlan
+from data_model.db_handler import DatabaseHandler
+from data_model.mappers import api_event_to_db_event
 from evolutionary_gpt_agent.components.bdi.actuators_handler import (
     ActuatorHandler,
     GameConfig,
 )
 from evolutionary_gpt_agent.components.bdi.tester import CodeTester
 from evolutionary_gpt_agent.components.gpt_client import Client, load_prompt_templates
-from models.api import Event
-from models.db.models import BeliefSet, Checkpoint, CheckpointType
-from models.db.models import Event as DbEvent
-from models.db.models import Experiment, Perceiver
-from models.db.models import Plan as DbPlan
-from models.db_handler import DatabaseHandler
-from models.mappers import api_event_to_db_event
 
 _SLEEP_FOR_FIRST_EVENT = 1
 _SLEEP_FOR_EVENTS_BATCH = 1
