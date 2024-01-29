@@ -70,6 +70,18 @@ class DatabaseHandler:
 
         return experiment
 
+    def get_parent_event(self, event: Event) -> Event:
+        parent_event = self._session.execute(
+            select(Event).filter(Event.event_id == event.event_id)
+        ).one[0]
+
+        if not isinstance(parent_event, Event):
+            raise Exception(
+                f"not able to fetch the parent event from the event {event.event_id}"
+            )
+
+        return event
+
     def get_all_perceivers(self, experiment: Experiment) -> list[Perceiver]:
         return [
             row[0]
@@ -125,3 +137,39 @@ class DatabaseHandler:
             events_by_perceivers[perceiver] = events
 
         return events_by_perceivers
+
+    def get_last_checkpoint(self, checkpoint: Checkpoint) -> Checkpoint:
+        last_checkpoint = self._session.execute(
+            select(Checkpoint).filter(Checkpoint.checkpoint_id == checkpoint.parent_id)
+        ).one()[0]
+
+        if not isinstance(last_checkpoint, Checkpoint):
+            raise Exception("not able to fetch the previous checkpoint")
+
+        return last_checkpoint
+
+    def get_perceiver_from_checkpoint(self, checkpoint: Checkpoint) -> Perceiver:
+        perceiver = self._session.execute(
+            select(Perceiver).filter(
+                Perceiver.checkpoint_id == checkpoint.checkpoint_id
+            )
+        ).one[0]
+
+        if not isinstance(perceiver, Perceiver):
+            raise Exception(
+                "not able to fetch the perceiver from the "
+                f"checkpoint {checkpoint.checkpoint_id}"
+            )
+
+        return perceiver
+
+    def get_events_to_reprocess(self, perceiver: Perceiver) -> list[Event]:
+        return [
+            row[0]
+            for row in self._session.execute(
+                select(Event).filter(
+                    Event.event_id >= perceiver.start_event_id,
+                    Event.event_id <= perceiver.end_event_id,
+                )
+            ).all()
+        ]

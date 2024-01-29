@@ -135,11 +135,17 @@ class Agent:
                 first_event = None
 
             for i, batch in enumerate(event_batches):
-                logger.info(f"processing batch {i}/{len(event_batches)}")
-                self._process_event_batch(batch)
+                is_consisent = False
 
-                if not self._is_belief_set_consistency():
-                    self._rollback_checkpoint()
+                while not is_consisent:
+                    logger.info(f"processing batch {i}/{len(event_batches)}")
+                    self._process_event_batch(batch)
+
+                    # if not self._is_belief_set_consistency():
+                    #     self._rollback_checkpoint()
+                    # else:
+                    #     is_consisent = True
+                    is_consisent = True
 
                 if (
                     self._event_types.should_use_refactored_perceiver()
@@ -269,14 +275,19 @@ class Agent:
 
     def _is_belief_set_consistency(self) -> Any:
         while True:
-            prompt, checker = self._gpt_client.new_consistency_rule(
+            prompt, rule_code = self._gpt_client.new_consistency_rule(
                 self._belief_set, "check_sat"
             )
 
-            if checker.is_valid(belief_set=self._belief_set):
+            rule = CodeTester(
+                rule_code,
+                "check_sat",
+            )
+
+            if rule.is_valid(belief_set=self._belief_set):
                 break
 
-        return checker(belief_set=self._belief_set)
+        return rule(belief_set=self._belief_set)
 
     def _refactor_perceivers(self) -> None:
         is_perceiver_valid = False
@@ -365,7 +376,15 @@ class Agent:
                 is_plan_valid = True
 
     def _rollback_checkpoint(self) -> None:
-        ...
+        broken_perceiver = self._db_handler.get_perceiver_from_checkpoint(
+            self._checkpoint
+        )
+        last_checkpoint = self._db_handler.get_last_checkpoint(self._checkpoint)
+        events_to_reprocess = self._db_handler.get_events_to_reprocess(broken_perceiver)
+        events_to_reprocess = sorted(events_to_reprocess, key=lambda e: e.event_id)
+
+        self._last_event = self._db_handler.get_parent_event(events_to_reprocess[0])
+        self._checkpoint = last_checkpoint
 
     def _execute_plan(self) -> None:
         while self._plan:
