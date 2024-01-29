@@ -137,6 +137,10 @@ class Agent:
             for i, batch in enumerate(event_batches):
                 logger.info(f"processing batch {i}/{len(event_batches)}")
                 self._process_event_batch(batch)
+
+                if not self._is_belief_set_consistency():
+                    self._rollback_checkpoint()
+
                 if (
                     self._event_types.should_use_refactored_perceiver()
                     and self._refactored_perceiver is None
@@ -263,6 +267,17 @@ class Agent:
                 self._perceiver_version += 1
             is_perceiver_valid = True
 
+    def _is_belief_set_consistency(self) -> Any:
+        while True:
+            prompt, checker = self._gpt_client.new_consistency_rule(
+                self._belief_set, "check_sat"
+            )
+
+            if checker.is_valid(belief_set=self._belief_set):
+                break
+
+        return checker(belief_set=self._belief_set)
+
     def _refactor_perceivers(self) -> None:
         is_perceiver_valid = False
         perceivers = self._db_handler.get_all_perceivers(self._experiment)
@@ -348,6 +363,9 @@ class Agent:
                 self._db_handler.insert([plan_model])
                 self._plan_version += 1
                 is_plan_valid = True
+
+    def _rollback_checkpoint(self) -> None:
+        ...
 
     def _execute_plan(self) -> None:
         while self._plan:

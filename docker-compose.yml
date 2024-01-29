@@ -30,6 +30,22 @@ services:
       start_period: 15s # period in which the start_interval is applied instead of the normal interval
       start_interval: 2s
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "9999:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+
   run_migrations:
     build:
       context: .
@@ -117,3 +133,4 @@ services:
 
 volumes:
   pg_data:
+  pgadmin_data:
